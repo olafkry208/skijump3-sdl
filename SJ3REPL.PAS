@@ -6,7 +6,7 @@ procedure replays(start:boolean;version:string;gdetail:byte);
 
 implementation
 
-uses SJ3Unit, SJ3info, SJ3Help, SJ3PCX, SJ3Graph, Tuuli, Maki, Lumi, SJ3lang, sdlport, SysUtils;
+uses SJ3Unit, SJ3info, SJ3Help, SJ3PCX, SJ3Graph, Tuuli, Maki, Lumi, SJ3lang, sdlport, sdl2, SysUtils;
 
 
 procedure replays;
@@ -15,6 +15,7 @@ var filenames : array[0..500] of string[12];
     f1 : text;
     oldindex, temp, index : integer;
 {    tempch,tempch2 : char; }
+    keycode : TSDL_KeyCode;
     intro:boolean;
 
     result : byte;
@@ -49,6 +50,7 @@ var filenames : array[0..500] of string[12];
 
      XY : array[0..1,0..1000] of integer;
 {     ch, ch2 : char; }
+     keycode : TSDL_KeyCode;
 
   function txts(phase:byte):string;
   var str1 : string;
@@ -97,7 +99,7 @@ var filenames : array[0..500] of string[12];
 
    { LoadInfo(nytmaki,ActHill); }
 
-   ch:=#1;
+   keycode:=TSDL_KeyCode(1);
 
    X:=StartX;
    Y:=StartY;
@@ -163,7 +165,7 @@ var filenames : array[0..500] of string[12];
     if (mode>0) then
      begin
 
-      ch:=#1; ch2:=#1;
+      keycode:=TSDL_KeyCode(1);
 
 {      temp:=0;
 
@@ -183,7 +185,7 @@ var filenames : array[0..500] of string[12];
        257 : introbox(5);
        420 : introbox(6);
        550 : begin introbox(7); introbox(8); introbox(9); end;
-       822 : begin introbox(10); ch:=#27; end;
+       822 : begin introbox(10); keycode:=SDLK_ESCAPE; end;
        end;
 
       X:=XY[0,RTurns];
@@ -296,17 +298,17 @@ var filenames : array[0..500] of string[12];
 
      if (SDLPort.KeyPressed) then
       begin
-       SDLPort.WaitForKeyPress(ch,ch2);
-       if {(ch2=#80) or (ch2=#72) or} (upcase(ch)='P') then mode:=3;
-       if (ch2=#77) then if (mode=1) then mode:=3 else mode:=1;
-       if (ch2=#75) then if (mode=2) then mode:=3 else mode:=2;
-       if (ch2=#68) then ch:=#27;
+       keycode:=SDLPort.WaitForKeyPress();
+       if {(keycode=SDLK_DOWN) or (keycode=SDLK_UP) or} (keycode=SDLK_p) then mode:=3;
+       if (keycode=SDLK_RIGHT) then if (mode=1) then mode:=3 else mode:=1;
+       if (keycode=SDLK_LEFT) then if (mode=2) then mode:=3 else mode:=2;
+       if (keycode=SDLK_F10) then keycode:=SDLK_ESCAPE;
 
-       if (ch=' ') and (mode=0) then mode:=5;
+       if (keycode=SDLK_SPACE) and (mode=0) then mode:=5;
 
       temp:=speed;
-       if ((ch='+') or (ch2=#80)) and (speed<5) then inc(speed);
-       if ((ch='-') or (ch2=#72)) and (speed>0) then dec(speed);
+       if ((keycode=SDLK_PLUS) or (keycode=SDLK_DOWN)) and (speed<5) then inc(speed);
+       if ((keycode=SDLK_MINUS) or (keycode=SDLK_UP)) and (speed>0) then dec(speed);
 
        if (temp<>speed) and (mode=0) then mode:=4;
 
@@ -361,11 +363,11 @@ var filenames : array[0..500] of string[12];
 
       DrawScreen;
 
-   until (ch=#27);
+   until (keycode=SDLK_ESCAPE);
 
   end;
 
- clearchs;
+ keycode:=TSDL_KeyCode(1); { clearchs; }
 
 end;
 
@@ -484,7 +486,7 @@ end;
   clearscreen;
   fontcolor(246);
   writefont(170,80,lstr(290));
-  getch(177+fontlen(lstr(290)),80,243,ch,ch2);
+  keycode:=getch(177+fontlen(lstr(290)),80,243);
   DrawScreen;
  end;
 
@@ -626,15 +628,15 @@ if (start) then
 
        end;
 
-      ch:=#1; ch2:=#1; oldindex:=index;
+      keycode:=TSDL_KeyCode(1); oldindex:=index;
 
-      SDLPort.WaitForKeyPress(ch,ch2);
+      keycode:=SDLPort.WaitForKeyPress();
 
-      if (ch2=#77) or (ch2=#80) or (ch=' ') or (ch='+') then inc(index);
-      if (ch2=#75) or (ch2=#72) or (ch='-') then dec(index);
-      if (ch2=#68) then ch:=#27;
+      if (keycode=SDLK_RIGHT) or (keycode=SDLK_DOWN) or (keycode=SDLK_SPACE) or (keycode=SDLK_PLUS) then inc(index);
+      if (keycode=SDLK_LEFT) or (keycode=SDLK_UP) or (keycode=SDLK_MINUS) then dec(index);
+      if (keycode=SDLK_F10) then keycode:=SDLK_ESCAPE;
 
-      if (ch=#13) and (result=0) then
+      if (keycode=SDLK_RETURN) and (result=0) then
        begin
         playreplay;
         oldindex:=0; { piirt„„ ruudun uudestaan sitten }
@@ -643,13 +645,13 @@ if (start) then
         { savedscreen; }
        end;
 
-      if (ch2=#83) then { delete! }
+      if (keycode=SDLK_DELETE) then { delete! }
        begin
         if (mightdelete(filenames[index]+'.SJR') = 0) then
          begin
           FindReplays;
          end;
-         ch:=#1;
+         keycode:=TSDL_KeyCode(1);
          oldindex:=0;
          drawmainmenu;
          mainmenutext(0,version);
@@ -657,14 +659,14 @@ if (start) then
          if (numreplays=0) then
           begin
            noreplays;
-           ch:=#27;
+           keycode:=SDLK_ESCAPE;
           end;
        end;
 
       if (index<1) then index:=NumReplays;
       if (index>NumReplays) then index:=1;
 
-     until (ch=#27);
+     until (keycode=SDLK_ESCAPE);
 
     end else
      begin

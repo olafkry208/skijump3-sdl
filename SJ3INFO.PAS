@@ -4,7 +4,7 @@ unit sj3info; { pelaaja & profiili-infoa }
 
 interface { -------------------------------------------------------------- }
 
-uses maki, sj3unit, sj3help, sj3graph, sj3lang, sj3pcx, sdlport, SysUtils;
+uses maki, sj3unit, sj3help, sj3graph, sj3lang, sj3pcx, sdlport, sdl2, SysUtils;
 
 procedure Init;
 
@@ -537,6 +537,7 @@ var hill, y : integer;
      temp2 : integer;
      tempb,result : byte;
      temphillorder : array[0..41] of integer;
+     keycode : TSDL_KeyCode;
 
   procedure nocustoms;
   begin
@@ -593,18 +594,18 @@ var hill, y : integer;
 
     drawscreen;
 
-    clearchs;
-    SDLPort.WaitForKeyPress(ch,ch2);
+    keycode:=TSDL_KeyCode(1); { clearchs; }
+    keycode:=SDLPort.WaitForKeyPress();
 
-    if (ch='+') or (ch=' ') or (ch2=#77)  or (ch2=#80) then inc(actcustom);
-    if (ch='-') or (ch2=#75) or (ch2=#72) then dec(actcustom);
-    if (ch2=#71) then actcustom:=1;
-    if (ch2=#79) then actcustom:=numcustoms;
+    if (keycode=SDLK_PLUS) or (keycode=SDLK_SPACE) or (keycode=SDLK_RIGHT) or (keycode=SDLK_DOWN) then inc(actcustom);
+    if (keycode=SDLK_MINUS) or (keycode=SDLK_LEFT) or (keycode=SDLK_UP) then dec(actcustom);
+    if (keycode=SDLK_HOME) then actcustom:=1;
+    if (keycode=SDLK_END) then actcustom:=numcustoms;
 
     if (actcustom<1) then actcustom:=1;
     if (actcustom>numcustoms) then actcustom:=numcustoms;
 
-    if (ch2=#83) then { delete! }
+    if (keycode=SDLK_DELETE) then { delete! }
      begin
       if (mightdelete(filenames[actcustom]+'.SJC') = 0) then
        begin
@@ -620,9 +621,9 @@ var hill, y : integer;
        doscreen;
      end;
 
-    if (ch=#27) or (ch2=#68) then leave2:=true;
+    if (keycode=SDLK_ESCAPE) or (keycode=SDLK_F10) then leave2:=true;
 
-    if (ch=#13) then
+    if (keycode=SDLK_RETURN) then
      begin
       if (loadcustom(filenames[actcustom],sortby,HillOrder,CupHills) > 0) then
        begin
@@ -641,7 +642,7 @@ var hill, y : integer;
    end;
 
   doscreen;
-  clearchs;
+  keycode:=TSDL_KeyCode(1); { clearchs; }
 
   selectload:=result;
 
@@ -702,6 +703,7 @@ var hill, y : integer;
  var result,temp : integer;
      str1 : string;
    {  tempch,tempch2 : char; }
+     keycode : TSDL_KeyCode;
 
  begin
 
@@ -725,7 +727,7 @@ var hill, y : integer;
 
   if (str1<>'ÿ') then
    begin
-    ch:='Y';
+    keycode:=TSDL_KeyCode('Y');
 
     if (fexist(str1+'.SJC')) then { file exists }
      begin
@@ -734,10 +736,10 @@ var hill, y : integer;
       writefont(80,90,'FILE '+str1+'.SJC ALREADY EXISTS.');
       writefont(80,110,'WRITE OVER? (Y/N):');
 
-      getch(190,110,243,ch,ch2);
+      keycode:=getch(190,110,243);
      end;
 
-    if (upcase(ch)='Y') then
+    if (upcase(chr(keycode))='Y') then
      begin
       for temp:=1 to 20 do defaulthi(top[temp+41]);
       result:=WriteCustom(str1,sortby,hillorder,cuphills);
@@ -750,7 +752,7 @@ var hill, y : integer;
 
   doscreen;
 
-  clearchs;
+  keycode:=TSDL_KeyCode(1); { clearchs; }
 
   saveset:=result;
 
@@ -776,6 +778,7 @@ var hill, y : integer;
      str1 : string;
      {ch, ch2 : char; }
      hills : byte;
+     keycode : TSDL_KeyCode;
 
   begin
 
@@ -816,32 +819,32 @@ var hill, y : integer;
 
       DrawScreen;
 
-      clearchs;
+      keycode:=TSDL_KeyCode(1); { clearchs; }
 
-      SDLPort.WaitForKeyPress(ch,ch2);
+      keycode:=SDLPort.WaitForKeyPress();
 
-      if ((ch2=#71) or (ch2=#83)) then HillOrder[CupHills+1]:=1; { home }
-      if (ch2=#79) then HillOrder[CupHills+1]:=Hills; { end }
-      if ({(ch2=#72) or} (ch2=#75)) and (HillOrder[CupHills+1]>1) then dec(HillOrder[CupHills+1]);
-      if ({(ch2=#80) or} (ch2=#77)) and (HillOrder[CupHills+1]<Hills) then inc(HillOrder[CupHills+1]);
-      if (ch2=#73) and (HillOrder[CupHills+1]>5) then dec(HillOrder[CupHills+1],5);
-      if (ch2=#81) and (HillOrder[CupHills+1]<Hills-5) then inc(HillOrder[CupHills+1],5);
-      if (ch2=#68) then begin { CupHills:=1; } ch:=#27; end;
-      if ({(ch2=#83) or }(ch=#8) or (ch2=#72)) and (CupHills>0) then { delete }
+      if ((keycode=SDLK_HOME) or (keycode=SDLK_DELETE)) then HillOrder[CupHills+1]:=1; { home }
+      if (keycode=SDLK_END) then HillOrder[CupHills+1]:=Hills; { end }
+      if ({(keycode=SDLK_UP) or} (keycode=SDLK_LEFT)) and (HillOrder[CupHills+1]>1) then dec(HillOrder[CupHills+1]);
+      if ({(keycode=SDLK_DOWN) or} (keycode=SDLK_RIGHT)) and (HillOrder[CupHills+1]<Hills) then inc(HillOrder[CupHills+1]);
+      if (keycode=SDLK_PAGEUP) and (HillOrder[CupHills+1]>5) then dec(HillOrder[CupHills+1],5);
+      if (keycode=SDLK_PAGEDOWN) and (HillOrder[CupHills+1]<Hills-5) then inc(HillOrder[CupHills+1],5);
+      if (keycode=SDLK_F10) then begin { CupHills:=1; } keycode:=SDLK_ESCAPE; end;
+      if ({(keycode=SDLK_DELETE) or }(keycode=SDLK_BACKSPACE) or (keycode=SDLK_UP)) and (CupHills>0) then { delete }
        begin
         dohill(Cuphills+1,3);
         dec(CupHills);
        end;
-      if (upcase(ch)=paraletter(lstr(285))) then if (selectload=0) then str1:=HillSummary;
-      if (upcase(ch)=paraletter(lstr(286))) and (CupHills>0) then if (saveset=0) then str1:=HillSummary;
-      if (upcase(ch)=paraletter(lstr(288))) then
+      if (upcase(chr(keycode))=paraletter(lstr(285))) then if (selectload=0) then str1:=HillSummary;
+      if (upcase(chr(keycode))=paraletter(lstr(286))) and (CupHills>0) then if (saveset=0) then str1:=HillSummary;
+      if (upcase(chr(keycode))=paraletter(lstr(288))) then
        begin
         inc(sortby);
         if (sortby=2) then sortby:=0;
         doscreen;
        end;
 
-      if (upcase(ch)=paraletter(lstr(287))) then { randomize }
+      if (upcase(chr(keycode))=paraletter(lstr(287))) then { randomize }
        begin
         if (cuphills < maxcustomhills) then
          begin
@@ -856,21 +859,21 @@ var hill, y : integer;
         end;
        end;
 
-    until (ch=#13) or (ch=#27) or (ch2=#80) or (ch=' ');
+    until (keycode=SDLK_RETURN) or (keycode=SDLK_ESCAPE) or (keycode=SDLK_DOWN) or (keycode=SDLK_SPACE);
 
 {     if (ch=#27) then dec(CupHills); }
 
-     if ((ch=' ') or (ch2=#80)) then
+     if ((keycode=SDLK_SPACE) or (keycode=SDLK_DOWN)) then
       begin
        if (CupHills < maxcustomhills) then inc(CupHills);
        dohill(CupHills,2);
       end;
 
-   until (ch=#13) or (ch=#27);
+   until (keycode=SDLK_RETURN) or (keycode=SDLK_ESCAPE);
 
  if (str1<>HillSummary) then SetFile:='TEMP'; { setti muuttunut, enkat menee t„nne }
 
- if ((ch2=#68) or (ch=#27)) then CupHills:=0; { kikkaillaan v„h„n... }
+ if ((keycode=SDLK_F10) or (keycode=SDLK_ESCAPE)) then CupHills:=0; { kikkaillaan v„h„n... }
 
  if (CupHills>0) then
   begin
@@ -1640,6 +1643,7 @@ procedure selectreplace(index:integer);
 var x,y : integer;
     value : integer;
 {    ch,ch2 : char; }
+    keycode : TSDL_KeyCode;
 begin
 
  value:=Profile[index].replace;
@@ -1668,26 +1672,23 @@ begin
 
   DrawScreen;
 
-  SDLPort.WaitForKeyPress(ch,ch2);
+  keycode:=SDLPort.WaitForKeyPress();
 
-  if (ch=#0) then
-   begin
-    if (ch2=#71) then value:=1;
-    if (ch2=#79) then value:=65;
-    if (ch2=#72) or (ch2=#75) then dec(value);
-    if (ch2=#80) or (ch2=#77) then inc(value);
-    if (ch2=#73) then dec(value,10);
-    if (ch2=#81) then inc(value,10);
-   end;
+  if (keycode=SDLK_HOME) then value:=1;
+  if (keycode=SDLK_END) then value:=65;
+  if (keycode=SDLK_UP) or (keycode=SDLK_LEFT) then dec(value);
+  if (keycode=SDLK_DOWN) or (keycode=SDLK_RIGHT) then inc(value);
+  if (keycode=SDLK_PAGEUP) then dec(value,10);
+  if (keycode=SDLK_PAGEDOWN) then inc(value,10);
 
   if (value<0) then value:=0;
   if (value>65) then value:=65;
 
 {  if (ch=#13) and (not ok) then ch:=#1; }
 
-  until (ch=#13) or (ch=#27);
+  until (keycode=SDLK_RETURN) or (keycode=SDLK_ESCAPE);
 
-  if (ch=#13) then Profile[index].replace:=value;
+  if (keycode=SDLK_RETURN) then Profile[index].replace:=value;
 
 end;
 
@@ -1695,6 +1696,7 @@ end;
 function question(str1:string):boolean;
 var temp : byte;
  {   tempch,tempch2 : char; }
+    keycode : TSDL_KeyCode;
     tempboo : boolean;
     str2 : string;
 
@@ -1716,12 +1718,12 @@ begin
  writefont(70,90,str1);
  writefont(70,110,str2);
 
- getch(70+temp,110,243,ch,ch2);
+ keycode:=getch(70+temp,110,243);
 
  tempboo:=false;
- if (upcase(ch) = lch(6,1)) then tempboo:=true;
+ if (upcase(chr(keycode)) = lch(6,1)) then tempboo:=true;
 
- clearchs;
+ keycode:=TSDL_KeyCode(1); { clearchs; }
 
  question:=tempboo;
 
@@ -1795,6 +1797,7 @@ var sch1, sch2 : char;
     index : byte;
     leave : boolean;
     str1 : string;
+    keycode : TSDL_KeyCode;
 
 begin
 
@@ -1829,31 +1832,30 @@ begin
 
    drawscreen;
 
-    sch1:=#1; sch2:=#1;
-    SDLPort.WaitForKeyPress(sch1,sch2);
+    keycode:=SDLPort.WaitForKeyPress();
 
-    if (sch1='+') or (sch2=#77) or (sch2=#80) then
+    if (keycode=SDLK_PLUS) or (keycode=SDLK_RIGHT) or (keycode=SDLK_DOWN) then
      begin
       inc(index);
       if (index>NumPl-11) and (index<235) then index:=235;
       if (index>240) then index:=1;
      end;
 
-    if (sch1='-') or (sch2=#75) or (sch2=#72) then
+    if (keycode=SDLK_MINUS) or (keycode=SDLK_LEFT) or (keycode=SDLK_UP) then
      begin
       dec(index);
       if (index<235) and (index>Numpl) then index:=NumPl-11;
       if (index<1) then index:=240;
      end;
 
-    if (sch2=#71) then index:=1;
-    if (sch2=#79) then index:=240;
+    if (keycode=SDLK_HOME) then index:=1;
+    if (keycode=SDLK_END) then index:=240;
 
-    if (sch1=#27) or (sch2=#68) or (sch1=#13) then leave:=true;
+    if (keycode=SDLK_ESCAPE) or (keycode=SDLK_F10) or (keycode=SDLK_RETURN) then leave:=true;
 
    until (leave);
 
-  if (sch1=#13) then seecomps:=index;
+  if (keycode=SDLK_RETURN) then seecomps:=index;
 
 
 end;

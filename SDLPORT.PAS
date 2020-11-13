@@ -3,6 +3,8 @@ unit SDLPort;
 interface
 
   type TPalette = Array[0..255,0..2] of byte;
+  type SInt32 = LongInt;
+  type TSDL_KeyCode = SInt32;
 
   function GetVersion : string;
 
@@ -15,7 +17,7 @@ interface
   procedure WaitRaster;
 
   function KeyPressed : boolean;
-  procedure WaitForKeyPress(var ch1, ch2 : char);
+  function WaitForKeyPress : TSDL_KeyCode;
 
   procedure Wait(ms : integer);
 
@@ -271,17 +273,13 @@ begin
   SDL_SetWindowFullscreen(window, flags);
 end;
 
-procedure WaitForKeyPress(var ch1, ch2:char);
+function WaitForKeyPress : TSDL_KeyCode;
 var event : TSDL_Event;
     scancode: TSDL_ScanCode;
     keyPressed: TSDL_KeyCode;
     keyMod: UInt16;
 begin
-  ch1:=#0;
-  ch2:=#0;
-  // Setting ch2 to a correct scancode value for the key pressed can be largely ignored.
-  // It is only checked by the game for special keys, where ch1 is checked or assumed to be 0.
-  // This also means that the game cannot differentiate between different keys producing the same character.
+  keyPressed:=TSDL_KeyCode(0);
 
   while (true) do
   begin
@@ -296,24 +294,24 @@ begin
         // SDL version specific shortcuts
         if ((keyMod and KMOD_LALT) > 0) then
         begin
-          Case scancode of
-            SDL_SCANCODE_RETURN :
+          Case keyPressed of
+            SDLK_RETURN :
               begin
                 toggleFullscreen;
                 exit
               end;
-            SDL_SCANCODE_R :
+            SDLK_r :
               begin
                 ResetWindowSize;
                 exit
               end;
-            SDL_SCANCODE_KP_PLUS, SDL_SCANCODE_EQUALS :
+            SDLK_KP_PLUS, SDLK_EQUALS :
               begin
                 windowMultiplier := windowMultiplier + 1;
                 ResetWindowSize;
                 exit
               end;
-            SDL_SCANCODE_KP_MINUS, SDL_SCANCODE_MINUS :
+            SDLK_KP_MINUS, SDLK_MINUS :
               begin
                 if (windowMultiplier > 1) then
                 begin
@@ -325,6 +323,18 @@ begin
           end;
         end;
 
+        // Ignore modifier and status keys, since they did not trigger a keypress in DOS version.
+        // F11, F12 and probably others were ignored too, but that would probably be counterintuitive.
+        case event.key.keysym.sym of
+          SDLK_LCTRL, SDLK_RCTRL,
+          SDLK_LSHIFT, SDLK_RSHIFT,
+          SDLK_LALT, SDLK_RALT,
+          SDLK_LGUI, SDLK_RGUI,
+          SDLK_CAPSLOCK, SDLK_SCROLLLOCK, SDLK_NUMLOCKCLEAR,
+          SDLK_PRINTSCREEN, SDLK_SYSREQ, SDLK_PAUSE:
+            continue; // Keypress ignored
+        end;
+
         // Special cases for key combinations used throughout the game.
         // Check for Right Alt/AltGr first, since pressing it can make Left Ctrl look as pressed too.
         if ((keyMod and KMOD_MODE) > 0) then exit;
@@ -332,7 +342,7 @@ begin
         if ((keyMod and KMOD_LALT) > 0) then
         begin
           Case keyPressed of
-            SDLK_x: begin ch1:=#0; ch2:=#45; exit end; {ALT-X}
+            SDLK_x: begin exit end; { TODO: ALT-X }
           else
             exit
           end;
@@ -340,30 +350,18 @@ begin
         if ((keyMod and KMOD_CTRL) > 0) then
         begin
           Case keyPressed of
-            SDLK_c: begin ch1:=#3; exit end; {CTRL-C}
+            SDLK_c: begin exit end; { TODO: CTRL-C }
           else
             exit
           end;
         end;
         if ((keyMod and KMOD_GUI) > 0) then exit;
 
-        // Handle conversion of letters to uppercase.
-        // Convert only if Caps Lock is off and Shift is pressed or vice versa.
-        if (
-            ((keyMod and KMOD_SHIFT) > 0) xor ((keyMod and KMOD_CAPS) > 0)
-        ) then
-        begin
-          Case keypressed of
-            97..122, 224..246, 248..254: keyPressed:=TSDL_KeyCode(keyPressed - 32);
-          end;
-        end;
-
         // If modifier is Shift, convert the key pressed accordingly.
         // For special keys, standard US QWERTY layout is assumed.
         if ((keyMod and KMOD_SHIFT) > 0) then
         begin
           Case keyPressed of
-            65..90, 97..122, 190..214, 216..222, 224..246, 248..254: ; // Already handled above
             SDLK_1 : keyPressed:=SDLK_EXCLAIM;
             SDLK_2 : keyPressed:=SDLK_AT;
             SDLK_3 : keyPressed:=SDLK_HASH;
@@ -385,8 +383,6 @@ begin
             SDLK_COMMA : keyPressed:=SDLK_LESS;
             SDLK_PERIOD : keyPressed:=SDLK_GREATER;
             SDLK_SLASH : keyPressed:=SDLK_QUESTION;
-          else
-            exit
           end;
         end;
 
@@ -398,7 +394,7 @@ begin
             SDLK_KP_2 : keyPressed:=SDLK_DOWN;
             SDLK_KP_3 : keyPressed:=SDLK_PAGEDOWN;
             SDLK_KP_4 : keyPressed:=SDLK_LEFT;
-            SDLK_KP_5 : begin ch1:=#0; ch2:=#76; exit end;
+            SDLK_KP_5 : ;
             SDLK_KP_6 : keyPressed:=SDLK_RIGHT;
             SDLK_KP_7 : keyPressed:=SDLK_HOME;
             SDLK_KP_8 : keyPressed:=SDLK_UP;
@@ -431,82 +427,7 @@ begin
           SDLK_KP_EQUALS : keyPressed:=SDLK_EQUALS;
         end;
 
-        Case keyPressed of
-          SDLK_RETURN : ch1:=#13;
-          SDLK_ESCAPE : ch1:=#27;
-          SDLK_BACKSPACE : ch1:=#8;
-          SDLK_TAB : ch1:=#9;
-
-          32..126 : ch1:=chr(keyPressed);
-
-          // Special characters supported by the game, OEM 865 nordic encoding is used for ch1 values
-          196 : begin ch1:=#142; exit end; // A with diaeresis
-          197 : begin ch1:=#143; exit end; // A with ring above
-          198 : begin ch1:=#146; exit end; // AE
-          214 : begin ch1:=#153; exit end; // O with diaeresis
-          216 : begin ch1:=#157; exit end; // O with stroke
-          220 : begin ch1:=#154; exit end; // U with diaeresis
-          223 : begin ch1:=#225; exit end; // sharp s
-
-          228 : begin ch1:=#132; ch2:=#36; exit end; // a with diaeresis
-          229 : begin ch1:=#134; ch2:=#26; exit end; // a with ring above
-          230 : begin ch1:=#145; exit end; // ae
-          246 : begin ch1:=#148; ch2:=#39; exit end; // o with diaeresis
-          248 : begin ch1:=#158; exit end; // o with stroke
-          252 : begin ch1:=#129; exit end; // u with diaeresis
-        end;
-
-        Case keyPressed of
-          SDLK_F1 : ch2:=#59;
-          SDLK_F2 : ch2:=#60;
-          SDLK_F3 : ch2:=#61;
-          SDLK_F4 : ch2:=#62;
-          SDLK_F5 : ch2:=#63;
-          SDLK_F6 : ch2:=#64;
-          SDLK_F7 : ch2:=#65;
-          SDLK_F8 : ch2:=#66;
-          SDLK_F9 : ch2:=#67;
-          SDLK_F10 : ch2:=#68;
-
-          SDLK_LEFT : ch2:=#75;
-          SDLK_RIGHT : ch2:=#77;
-          SDLK_UP : ch2:=#72;
-          SDLK_DOWN : ch2:=#80;
-
-          SDLK_INSERT : ch2:=#82;
-          SDLK_DELETE : ch2:=#83;
-          SDLK_HOME : ch2:=#71;
-          SDLK_END : ch2:=#79;
-          SDLK_PAGEUP : ch2:=#73;
-          SDLK_PAGEDOWN : ch2:=#81;
-
-          SDLK_a : ch2:=#30;
-          SDLK_b : ch2:=#48;
-          SDLK_c : ch2:=#46;
-          SDLK_d : ch2:=#32;
-          SDLK_e : ch2:=#18;
-          SDLK_f : ch2:=#33;
-          SDLK_g : ch2:=#34;
-          SDLK_h : ch2:=#35;
-          SDLK_i : ch2:=#23;
-          SDLK_j : ch2:=#36;
-          SDLK_k : ch2:=#37;
-          SDLK_l : ch2:=#38;
-          SDLK_m : ch2:=#50;
-          SDLK_n : ch2:=#49;
-          SDLK_o : ch2:=#24;
-          SDLK_p : ch2:=#25;
-          SDLK_q : ch2:=#16;
-          SDLK_r : ch2:=#19;
-          SDLK_s : ch2:=#31;
-          SDLK_t : ch2:=#20;
-          SDLK_u : ch2:=#22;
-          SDLK_v : ch2:=#47;
-          SDLK_w : ch2:=#17;
-          SDLK_x : ch2:=#45;
-          SDLK_y : ch2:=#21;
-          SDLK_z : ch2:=#44;
-        end;
+        WaitForKeyPress := keyPressed;
         exit;
       end;
     end;

@@ -9,7 +9,6 @@ function round(r:single):longint;
 
 function nsqrt(x:single):single;
 procedure putsaa;
-procedure clearchs;
 procedure waitforkey;
 function waitforkey2:boolean;
 
@@ -36,7 +35,7 @@ function toansi(str1:string):string;
 
 implementation
 
-uses maki, sj3unit, crt, dos, sj3graph, SDLPort;
+uses maki, sj3unit, crt, dos, sj3graph, SDLPort, sdl2;
 
 procedure Wait(C : integer) ;
 begin
@@ -112,33 +111,29 @@ end;
 procedure putsaa;
 {var ch : char; }
  begin
-  while SDLPort.KeyPressed do SDLPort.WaitForKeyPress(ch,ch2);
- end;
-
-procedure clearchs;
- begin
-  ch:=#1; ch2:=#1;
+  while SDLPort.KeyPressed do SDLPort.WaitForKeyPress();
  end;
 
 procedure waitforkey;
 {var ch : char; }
 begin
  putsaa;
- SDLPort.WaitForKeyPress(ch,ch2);
+ SDLPort.WaitForKeyPress();
 end;
 
 Function waitforkey2:boolean;
 var tempboole : boolean;
 {    ch2 : char; }
+    keycode : TSDL_KeyCode;
 begin
 
  putsaa;
 
  tempboole:=false;
 
- SDLPort.WaitForKeyPress(ch,ch2);
+ keycode:=SDLPort.WaitForKeyPress();
 
- if (ch=#0) and (ch2=#68) then tempboole:=true;
+ if (keycode=SDLK_F10) then tempboole:=true;
 
  waitforkey2:=tempboole;
 

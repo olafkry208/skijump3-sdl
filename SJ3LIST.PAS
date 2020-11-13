@@ -21,7 +21,7 @@ function Entry(Num, Pos, Who:integer; Name:string; Pts:longint; Len1, Len2:integ
 
 implementation
 
-uses sj3unit, sj3graph, sj3help, sj3pcx, sj3lang, sdlport;
+uses sj3unit, sj3graph, sj3help, sj3pcx, sj3lang, sdlport, sdl2;
 
 var X,Y,LastPos,Page, Plus, OwnPlayers, Players, Phase : integer;
     columns : byte;
@@ -183,6 +183,7 @@ var { tempch, tempch2:char; }
     temp : integer;
     good : boolean;
     str1 : string;
+    keycode : TSDL_KeyCode;
 
 begin
 
@@ -209,32 +210,23 @@ begin
 
   good:=false;
 
-  SDLPort.WaitForKeyPress(ch,ch2);
+  keycode:=SDLPort.WaitForKeyPress();
 
-  case ch of
-  #13, #27 : begin status:=-1; good:=true; end;
+  case keycode of
+  SDLK_RETURN, SDLK_ESCAPE : begin status:=-1; good:=true; end;
 
-  ' ' : begin inc(page); status:=temp; good:=true; end;
+  SDLK_F10 : begin status:=-2; good:=true; end; { TODO: CTRL-C, ALT-X }
 
-  #3 : begin status:=-2; good:=true; end; { CTRL-C }
+  SDLK_SPACE, SDLK_RIGHT, SDLK_PAGEDOWN : begin inc(page); status:=temp; good:=true; end;
 
-  end; { case }
-
-  if (ch=#0) then
-  case ch2 of
-  #68, #45 : begin status:=-2; good:=true; end; { F10, ALT-X }
-
-
-  #77,#81 : begin inc(page); status:=temp; good:=true; end; { PgDn, A_Right }
-
-  #71 : if (page>1) then { HOME }
+  SDLK_HOME : if (page>1) then
          begin
           page:=1;
           status:=0;
           good:=true;
          end;
 
-  #73,#75 : if (page>1) then { PgUp, A_Left }
+  SDLK_PAGEUP, SDLK_LEFT : if (page>1) then
               begin
                dec(page);
                case phase of
@@ -255,9 +247,9 @@ begin
 
  until (good);
 
- if (ch=#27) and (phase=3) then
+ if (keycode=SDLK_ESCAPE) and (phase=3) then
   begin
-   if (quitting(1)=0) then status:=-2 else ch:=#1;
+   if (quitting(1)=0) then status:=-2 else keycode:=TSDL_KeyCode(1);
   end;
 
  if (status>=0) then { we need a new screen }

@@ -1,6 +1,6 @@
 program Skijump3; { Reality Strikes }
 uses crt, dos, sj3graph, sj3pcx, sj3unit, sj3help, sj3info,
-     sj3list, sj3table, maki, lumi, tuuli, sj3lang, sj3repl, sdlport;
+     sj3list, sj3table, maki, lumi, tuuli, sj3lang, sj3repl, sdlport, sdl2;
 
 const
 
@@ -47,7 +47,7 @@ var
  mcluett : array[0..NumPl+1] of byte;
  luett : array[0..NumPl+1] of byte;
 
-  K : array[0..5] of word;
+  K : array[0..5] of TSDL_KeyCode;
 
 (*
  haalarit : array[0..MaxOwnPl] of byte;
@@ -493,6 +493,7 @@ end;
 procedure setupmenu;
 var index : array[0..4] of integer;
 {    ch,ch2 : char; }
+    keycode : TSDL_KeyCode;
     str1, str2 : string;
     f3 : text;
     ok, out : boolean;
@@ -642,11 +643,11 @@ begin
        4 : begin
             repeat
              ok:=false;
-             getch(255,70,245,ch,ch2);
+             keycode:=getch(255,70,245);
 
-             if (ch<>#27) then
+             if (keycode<>SDLK_ESCAPE) then
               begin
-               assign(f3,'names'+ch+'.ski');
+               assign(f3,'names'+chr(keycode)+'.ski');
                {$I-}
                reset(f3);
                {$I+}
@@ -659,9 +660,9 @@ begin
 
             until (ok);
 
-             if (ch<>#27) then
+             if (keycode<>SDLK_ESCAPE) then
               begin
-               namenumber:=ch;
+               namenumber:=chr(keycode);
                loadnames(namenumber,jmaara,TeamLineup,true);
               end;
 
@@ -709,9 +710,9 @@ begin
               writefont(80,90,str1+' '+lstr(192));
               writefont(80,110,lstr(193));
 
-              getch(88+fontlen(lstr(193)),110,243,ch,ch2);
+              keycode:=getch(88+fontlen(lstr(193)),110,243);
 
-              if (upcase(ch) = lch(6,1)) then ResetHiscore(4-index[screen]);
+              if (upcase(chr(keycode)) = lch(6,1)) then ResetHiscore(4-index[screen]);
              end;
        5 : begin
             ResetConfig;
@@ -766,6 +767,7 @@ var { SoundOn : array[0..5] of boolean; }
     temp,temp2 : integer;
 
 {   ch,ch2 : char; } { for #0 }
+    keycode : TSDL_KeyCode;
 
     statsvictim : integer;
 
@@ -1117,7 +1119,7 @@ begin
 
  kr:=acthill.kr;
 
- ch:=#0;
+ keycode:=TSDL_KeyCode(0);
 
   RTurns:=0;
 
@@ -1138,7 +1140,7 @@ begin
 
    if (LoadHill(KeulaX, nytmaki, Acthill)<>0) then
     begin
-     ch:=#27;
+     keycode:=SDLK_ESCAPE;
      cupslut:=true;
     end;
 
@@ -1410,7 +1412,7 @@ begin
 
  Tuuli.Hae;
 
- if (draw) and (ch<>#27) then
+ if (draw) and (keycode<>SDLK_ESCAPE) then
   repeat  { INFORUUTU LUUPPI! }
 
    inc(laskuri);
@@ -1469,16 +1471,16 @@ begin
 
    DrawScreen;
 
-   ch:=#1;
+   keycode:=TSDL_KeyCode(1);
 
    if (SDLPort.KeyPressed) then
     begin
-     SDLPort.WaitForKeyPress(ch,ch2);
-     if (ch=#0) and (ch2=#68) then begin cupslut:=true; ch:=#27; end;
-     if (upcase(ch)=lch(60,1)) then
+     keycode:=SDLPort.WaitForKeyPress();
+     if (keycode=SDLK_F10) then begin cupslut:=true; keycode:=SDLK_ESCAPE; end;
+     if (upcase(chr(keycode))=lch(60,1)) then
       begin
        SetupMenu;
-       ch:=#1;
+       keycode:=TSDL_KeyCode(1);
        LoadSuit(Profile[actprofile].suitcolor,0);
        LoadSkis(Profile[actprofile].skicolor,0);
        mcliivi:=true;
@@ -1489,14 +1491,14 @@ begin
 
      if (treeni) then
       begin
-       if (ch='+') then begin inc(startgate); ch:=#1; end;
-       if (ch='-') then begin dec(startgate); ch:=#1; end;
+       if (keycode=SDLK_PLUS) then begin inc(startgate); keycode:=TSDL_KeyCode(1); end;
+       if (keycode=SDLK_MINUS) then begin dec(startgate); keycode:=TSDL_KeyCode(1); end;
        if (startgate<1) then startgate:=1;
        if (startgate>30) then startgate:=30;
       end;
     end;
 
-  until (ch<>#1);
+  until (keycode<>TSDL_KeyCode(1));
 
   if (treeni) then maxspeed:=maxspeed+(startgate-15);
 
@@ -1528,7 +1530,7 @@ begin
   RstartX:=x;
   RstartY:=y;
 
- if (ch<>#27) and (draw) then  { ISTUU PARRULLA LUUPPI }
+ if (keycode<>SDLK_ESCAPE) and (draw) then  { ISTUU PARRULLA LUUPPI }
   repeat
 
    if (not treeni) then inc(laskuri);
@@ -1593,17 +1595,16 @@ begin
 
   DrawScreen;
 
-  ch:=#0; ch2:=#0;
+  keycode:=TSDL_KeyCode(0);
 
   if (SDLPort.KeyPressed) then
    begin
-    SDLPort.WaitForKeyPress(ch,ch2);
-    ch:=upcase(ch);
-    if (ch=#0) and (ch2=#68) then begin cupslut:=true; ch:=#27; end;
-    if (not cjumper) and ((kword(ch,ch2)=K[2]) or (ch=#13)) then out:=true; { liikkeelle }
-    if (ch=#0) and (ch2=#63) and (wcup) and (cupstyle=1) and
+    keycode:=SDLPort.WaitForKeyPress();
+    if (keycode=SDLK_F10) then begin cupslut:=true; keycode:=SDLK_ESCAPE; end;
+    if (not cjumper) and ((keycode=K[2]) or (keycode=SDLK_RETURN)) then out:=true; { liikkeelle }
+    if (keycode=SDLK_F5) and (wcup) and (cupstyle=1) and
        (index=NumPl) and (kierros=1) and (osakilpailu=1) then begin Tuuli.Alusta(windplace); end;
-    if (ch=#27) then out:=true;
+    if (keycode=SDLK_ESCAPE) then out:=true;
    end;
      if (cjumper) and ((random(100)=0) or (laskuri>600)) then Out:=True;
    if (cjumper) and (random(100)=0) and (kulmalaskuri=0) then
@@ -1616,9 +1617,9 @@ begin
 
    if (kulmalaskuri=0) and (not cjumper) then
     begin
-     if (kword(ch,ch2)=K[3]) then kulmalaskuri:=3000;
-     if (kword(ch,ch2)=K[4]) then kulmalaskuri:=2000;
-     if (kword(ch,ch2)=K[1]) then kulmalaskuri:=1000;
+     if (keycode=K[3]) then kulmalaskuri:=3000;
+     if (keycode=K[4]) then kulmalaskuri:=2000;
+     if (keycode=K[1]) then kulmalaskuri:=1000;
 
      sx:=0;
      sy:=0;
@@ -1627,7 +1628,7 @@ begin
 
    JumperAnim:=ParruAnim(kulmalaskuri);
 
-   if (ch=#27) and (cjumper) then JumperAnim:=164; { emm„ haluu tsiigaa }
+   if (keycode=SDLK_ESCAPE) and (cjumper) then JumperAnim:=164; { emm„ haluu tsiigaa }
 
   until ((Out) and (JumperAnim=164)) or (laskuri>700);
 
@@ -1649,7 +1650,7 @@ begin
      drawscreen;
 
      waitforkey;
-     ch:=#27;
+     keycode:=SDLK_ESCAPE;
     end;
 
   Out:=False;
@@ -1659,10 +1660,10 @@ begin
   laskuri:=0;
   px:=0;
 
- if (ch=#27) and (draw) and (cjumper) then  { emm„ haluukkaan tsiigata }
+ if (keycode=SDLK_ESCAPE) and (draw) and (cjumper) then  { emm„ haluukkaan tsiigata }
   begin
    draw:=false;
-   ch:=#0;
+   keycode:=TSDL_KeyCode(0);
   end;
 
 {  pl:=0.10; }
@@ -1683,7 +1684,7 @@ begin
  readkey;
 }
 
- if (ch<>#27) then { hyppy - main }
+ if (keycode<>SDLK_ESCAPE) then { hyppy - main }
   repeat
 
    Tuuli.Hae;
@@ -1697,24 +1698,22 @@ begin
 
    x:=round(matka+qx);
 
-   if (Ch<>#27) then Ch:=#0;  { en tied„ muisteleeko se vanhoja }
-   ch2:=#0;
+   if (keycode<>SDLK_ESCAPE) then keycode:=TSDL_KeyCode(0);  { en tied„ muisteleeko se vanhoja }
 
    if (SDLPort.KeyPressed) then
       begin
-       SDLPort.WaitForKeyPress(ch,ch2);
-       ch:=upcase(ch);
+       keycode:=SDLPort.WaitForKeyPress();
 
 {       if (cjumper) then ch:=#1; }
 
-       if (ch=#0) and (ch2=#68) then
+       if (keycode=SDLK_F10) then
         begin
          cupslut:=true;
-         ch:=#27;
+         keycode:=SDLK_ESCAPE;
          Out:=True;
         end;
 
-       if (ch=#27) then
+       if (keycode=SDLK_ESCAPE) then
         begin
 
          if (cjumper) then
@@ -1726,9 +1725,9 @@ begin
 
         end;
 
-        if (cjumper) then begin ch:=#0; ch2:=#0; end;
+        if (cjumper) then keycode:=TSDL_KeyCode(0);
 
-        if (ch='P') then SDLPort.WaitForKeyPress(ch,ch2);
+        if (keycode=SDLK_p) then SDLPort.WaitForKeyPress();
 
       end;
 
@@ -1749,8 +1748,8 @@ begin
       if (cjumper) then
        begin
          { automatic jumper angle differentiating }
-        if (LentoAnim(kulma1) > 107) and (laskuri mod reflex = 0) then begin ch:=chr(hi(K[2])); ch2:=chr(lo(K[2])); end;
-        if (LentoAnim(kulma1) < 107) and (laskuri mod reflex = 0) then begin ch:=chr(hi(K[3])); ch2:=chr(lo(K[3])); end;
+        if (LentoAnim(kulma1) > 107) and (laskuri mod reflex = 0) then keycode:=K[2];
+        if (LentoAnim(kulma1) < 107) and (laskuri mod reflex = 0) then keycode:=K[3];
 
         temp:=FindLanding(Makikulma(x));
 
@@ -1784,11 +1783,11 @@ begin
 
 {       if (upcase(ch)='T') then Landing:=1;
        if (upcase(ch)='R') then Landing:=2; }
-       if (kword(ch,ch2)=K[4]) then Landing:=1;
-       if (kword(ch,ch2)=K[5]) then Landing:=2;
+       if (keycode=K[4]) then Landing:=1;
+       if (keycode=K[5]) then Landing:=2;
 
-       if (kword(ch,ch2)=K[3]) and (kulma1<=600) then kulma1:=kulma1+round(kulma1/4);
-       if (kword(ch,ch2)=K[2]) and (Landing=0) and (kulma1>0) then kulma1:=kulma1-round(kulma1/5);
+       if (keycode=K[3]) and (kulma1<=600) then kulma1:=kulma1+round(kulma1/4);
+       if (keycode=K[2]) and (Landing=0) and (kulma1>0) then kulma1:=kulma1-round(kulma1/5);
 
 {       if (ch='x') then pl:=0.1; }
 
@@ -1950,7 +1949,7 @@ begin
        If (Ponnistus>0) then inc(ponnistus);
 
         { start ponnistus! }
-       If (kword(ch,ch2)=K[1]) and (matka>-40) and (ponnistus=0) then
+       If (keycode=K[1]) and (matka>-40) and (ponnistus=0) then
         begin
          inc(Ponnistus);
          { SoundOn[1]:=StartSound(Sound[1],1,False);}
@@ -2111,7 +2110,7 @@ begin
    kkor:=kor-KeulaY;
    hp:=round(nsqrt((matka*matka)+(kkor*kkor))*acthill.pk*0.5)*5;
 
-   if (ch=#27) then { painoi ESCi„ }
+   if (keycode=SDLK_ESCAPE) then { painoi ESCi„ }
     begin
      hp:=0;
      score:=0;
@@ -2448,16 +2447,15 @@ begin
 
          end;
 
-        Ch:=#0;
+        keycode:=TSDL_KeyCode(0);
 
         if (SDLPort.KeyPressed) then
          begin
-          SDLPort.WaitForKeyPress(ch,ch2);
-          ch:=upcase(ch);
+          keycode:=SDLPort.WaitForKeyPress();
          end;
-        if (ch=#0) and (Ch2=#68) then begin cupslut:=true; ch:=#27; end;
-        if (Ch=#27) or (Ch=#13) then Out:=True;
-        if (Ch='P') then SDLPort.WaitForKeyPress(ch,ch2);
+        if (keycode=SDLK_F10) then begin cupslut:=true; keycode:=SDLK_ESCAPE; end;
+        if (keycode=SDLK_ESCAPE) or (keycode=SDLK_RETURN) then Out:=True;
+        if (keycode=SDLK_p) then SDLPort.WaitForKeyPress();
 
         DeltaX:=Maki.X;
         DeltaY:=Maki.Y;
@@ -2727,8 +2725,8 @@ begin
         else
          if (SDLPort.KeyPressed) then
           begin
-           SDLPort.WaitForKeyPress(ch,ch2);
-           if (ch=#0) and (ch2=#68) then cupslut:=true;
+           keycode:=SDLPort.WaitForKeyPress();
+           if (keycode=SDLK_F10) then cupslut:=true;
           end;
       end;
 
@@ -2746,7 +2744,7 @@ begin
     str1:=profile[actprofile].realname;
     if (str1='') then str1:=profile[actprofile].name;
 
-    if (upcase(ch)=lch(298,2)) then
+    if (upcase(chr(keycode))=lch(298,2)) then
      begin
       temp:=replayinfo(replayfilename, str1, replayname, nytmaki, hp);
       if (temp=0) then temp:=writereplay(str1, replayname);
@@ -3391,6 +3389,7 @@ var index, num, numcustoms : integer;
     str1 : string;
     good, leave : boolean;
 {    tempch, tempch2 : char; }
+    keycode : TSDL_KeyCode;
     filenames : array [0..maxcustoms] of Filestr;
 
 
@@ -3465,30 +3464,23 @@ begin
 
   good:=false;
 
-  SDLPort.WaitForKeyPress(ch,ch2);
+  keycode:=SDLPort.WaitForKeyPress();
 {  ch2:=#1; }
 
-  case ch of
-  #27 : begin index:=-1; good:=true; end;
+  case keycode of
+  SDLK_ESCAPE : begin index:=-1; good:=true; end;
 
-  ' ',#13 : begin inc(index); good:=true; end;
-  #3 : begin index:=-2; good:=true; end; { CTRL-C }
+  SDLK_F10 : begin index:=-2; good:=true; end; { TODO: CTRL-C, ALT-X }
 
-  end; { case }
+  SDLK_SPACE, SDLK_RETURN, SDLK_RIGHT, SDLK_PAGEDOWN : begin inc(index); good:=true; end;
 
-  if (ch=#0) then
-  case ch2 of
-  #68, #45 : begin index:=-2; good:=true; end; { ALT-X, F10 }
-
-  #77,#81 : begin inc(index); good:=true; end; { PgDn, A_Right }
-
-  #71 : if (index>1) then { HOME }
+  SDLK_HOME : if (index>1) then
          begin
           index:=1;
           good:=true;
          end;
 
-  #73,#75 : if (index>1) then { PgUp, A_Left }
+  SDLK_PAGEUP, SDLK_LEFT : if (index>1) then
               begin
                dec(index);
                good:=true;
@@ -3878,6 +3870,7 @@ var t1,t2, pts : longint;
     extra : string;
     oknow : boolean;
     templuett : array[0..NumPl+1] of byte;
+    keycode : TSDL_KeyCode;
 
 function shouldishow(player:integer):byte;
 var outbyte : byte;
@@ -4042,7 +4035,7 @@ end;
 {  cupslut:=waitforkey2(ch); }
 
 {$IFDEF REG}
- if (not cupslut) and (cupstyle=0) and (ch<>#27) and (vaihe=4) and
+ if (not cupslut) and (cupstyle=0) and (keycode<>SDLK_ESCAPE) and (vaihe=4) and
     ((LCT) or (osakilpailu=NumWCHills)) then showstats;
 {$ENDIF}
 
@@ -4054,6 +4047,7 @@ var str1 : string;
     temp, who, pts : integer;
     extra : string;
     ldiff, leave : boolean;
+    keycode : TSDL_KeyCode;
  begin
 
  temp:=5;
@@ -4119,7 +4113,7 @@ var str1 : string;
   if (num=0) then
    begin
 {$IFDEF REG}
-    if (ch='s') or (ch='S') or (LCT) then
+    if (keycode=SDLK_s) or (LCT) then
      if (not cupslut) then showstats;
 {$ENDIF}
     if (osakilpailu=6) then sorthighs(1);
@@ -4547,13 +4541,14 @@ end;
 
 
 procedure training;
+var keycode : TSDL_KeyCode;
 begin
 
  osakilpailu:=0;
  kierros:=-10;
  treeni:=true;
  cupslut:=false;
- ch:=#1;
+ keycode:=TSDL_KeyCode(1);
  startgate:=15;
 
   repeat
@@ -4567,16 +4562,16 @@ begin
    if (nytmaki>0) then jumpalku;
 
    { kr:=kri[nytmaki]; }
-   if (ch<>#27) and (nytmaki>0) then
+   if (keycode<>SDLK_ESCAPE) and (nytmaki>0) then
     repeat
      Tuuli.Alusta(windplace);
 
      hyppy(1,NumPl+1,0);
 
      eka:=false;
-    until (ch=#27) or (cupslut);
+    until (keycode=SDLK_ESCAPE) or (cupslut);
 
-    ch:=#1;
+    keycode:=TSDL_KeyCode(1);
 
    until (cupslut);
 
@@ -4739,6 +4734,7 @@ end;
 procedure choosekoth;
 var temp, y : integer;
 {    ch2 : char; }
+    keycode : TSDL_KeyCode;
 
 begin
  kothmaara:=0;
@@ -4772,42 +4768,39 @@ begin
 
     DrawScreen;
 
-    SDLPort.WaitForKeyPress(ch,ch2);
+    keycode:=SDLPort.WaitForKeyPress();
 
-     if (ch=#13) then { tsekataan ettei sit„ pelaajaa ole jo }
+     if (keycode=SDLK_RETURN) then { tsekataan ettei sit„ pelaajaa ole jo }
       begin
        for temp:=1 to kothmaara-1 do
                 if kothpel[temp]=kothpel[kothmaara] then
                  begin
                   if (kothpel[kothmaara]<NumPl-pmaara) then inc(kothpel[kothmaara]);
                   if (beeppi) then beep(2);
-                  ch:=#1;
+                  keycode:=TSDL_KeyCode(1);
                  end;
               end;
 
-     if (ch=#0) then
-      begin
-       if (ch2=#71) then kothpel[kothmaara]:=1;
-       if (ch2=#79) then kothpel[kothmaara]:=NumPl-pmaara;
-       if ((ch2=#72) or (ch2=#75)) and (kothpel[kothmaara]>1) then dec(kothpel[kothmaara]);
-       if ((ch2=#80) or (ch2=#77)) and (kothpel[kothmaara]<NumPl-pmaara) then inc(kothpel[kothmaara]);
-       if (ch2=#73) and (kothpel[kothmaara]>10) then dec(kothpel[kothmaara],10);
-       if (ch2=#81) and (kothpel[kothmaara]<NumPl-9-pmaara) then inc(kothpel[kothmaara],10);
-      end;
+     if (keycode=SDLK_HOME) then kothpel[kothmaara]:=1;
+     if (keycode=SDLK_END) then kothpel[kothmaara]:=NumPl-pmaara;
+     if ((keycode=SDLK_UP) or (keycode=SDLK_LEFT)) and (kothpel[kothmaara]>1) then dec(kothpel[kothmaara]);
+     if ((keycode=SDLK_DOWN) or (keycode=SDLK_RIGHT)) and (kothpel[kothmaara]<NumPl-pmaara) then inc(kothpel[kothmaara]);
+     if (keycode=SDLK_PAGEUP) and (kothpel[kothmaara]>10) then dec(kothpel[kothmaara],10);
+     if (keycode=SDLK_PAGEDOWN) and (kothpel[kothmaara]<NumPl-9-pmaara) then inc(kothpel[kothmaara],10);
 
-     if (ch=#9) then ch:=#27;
+     if (keycode=SDLK_TAB) then keycode:=SDLK_ESCAPE;
 
-   until (ch=#13) or (ch=#27);
+   until (keycode=SDLK_RETURN) or (keycode=SDLK_ESCAPE);
 
-    if (ch=#27) then dec(kothmaara);
-    if (ch=#13) then
+    if (keycode=SDLK_ESCAPE) then dec(kothmaara);
+    if (keycode=SDLK_RETURN) then
      begin
       fontcolor(246);
       writefont(180,y,nsh(nimet[kothpel[kothmaara]],110));
       ewritefont(310,y,'#'+txt(kothpel[kothmaara]));
      end;
 
-  until (ch=#27) or (kothmaara=20);
+  until (keycode=SDLK_ESCAPE) or (kothmaara=20);
 
 end;
 
@@ -5029,6 +5022,7 @@ end;
 procedure startteam;
 var temp, temp2, index, team : integer;
     teamorder : array[1..15] of integer;
+    keycode : TSDL_KeyCode;
 
  procedure ShowTeams;
  var x,y, t1,t2,t3 : integer;
@@ -5143,7 +5137,7 @@ begin
 
 {    eka:=true; }  { hullu! }
 
-    if (ch<>'S') and (ch<>'s') then { 2. kierros }
+    if (keycode<>SDLK_s) then { 2. kierros }
      for index:=1 to 4 do
       begin
 
@@ -5172,7 +5166,7 @@ begin
 
 {       eka:=true; }
 
-      if (ch='S') or (ch='s') then { skippaus (?) }
+      if (keycode=SDLK_s) then { skippaus (?) }
        begin
         for temp:=1 to 15 do
          luett[temp]:=0;
@@ -5230,6 +5224,7 @@ procedure cup;  { cupstyle: 0 - SJ3 WC, 1 - Custom WC, 2 - Just 4Hills }
 var temp,temp2,index : integer;
     sortby, skipquali : byte;  { sortby: 0 - WC, 1 - t_points }
     fourhills, dokosystem, skip : boolean;
+    keycode : TSDL_KeyCode;
 
 begin
 
@@ -5270,7 +5265,7 @@ begin
 
  if (CupHills=0) then CupSlut:=true;
 
- ch:=#1;
+ keycode:=TSDL_KeyCode(1);
 
  repeat
 
@@ -5490,7 +5485,7 @@ begin
          eka:=false;
         end;
 
-      ch:=#1; { ettei hypyn keskeytt„minen sotke liikaa }
+      keycode:=TSDL_KeyCode(1); { ettei hypyn keskeytt„minen sotke liikaa }
 {
       for temp:=1 to pmaara do
        if (sija[NumPl+1-temp]>30) then stats[temp,osakilpailu].Reason[2]:=4;}  { Ei selvinnyt tokalle }
@@ -5536,7 +5531,7 @@ begin
 
     updaterecords(sortby); { enn„tystauluja jos tarvis }
 
-  until (osakilpailu=CupHills) or (Ch=#27) or (cupslut);
+  until (osakilpailu=CupHills) or (keycode=SDLK_ESCAPE) or (cupslut);
 
   mcpisteet[15]:=0;  { ????? mik„ 15? }
 

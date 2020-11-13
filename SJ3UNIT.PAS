@@ -3,6 +3,8 @@ Unit SJ3UNIT;
  {$I REGSTAT.PAS}
 
 interface
+  type SInt32 = LongInt;
+  type TSDL_KeyCode = SInt32;
 
 procedure Init;
 
@@ -108,7 +110,7 @@ var NumHills, Vcode : byte;
     NumExtraHills : word;
 
 {function getch(xx,yy:integer;bkcolor:byte):char;}
-procedure getch(xx,yy:integer;bkcolor:byte;var tempch,tempch2:char);
+function getch(xx,yy:integer;bkcolor:byte) : TSDL_KeyCode;
 function getstr(xx,yy,maxlength:integer;oldstr:string;bkcolor:byte):string;
 function getstr2(xx,yy,maxchars:integer;oldstr:string;bkcolor:byte):string;
 
@@ -177,10 +179,10 @@ function dayandtime(D1:Date;T1:Time):string;
 Function Luehaalarit(index,col:byte):byte;
 function injured:shortint;
 
-function keyname(chw:word):string;
+function keyname(keycode:TSDL_KeyCode):string;
 function kword(ch1,ch2:char):word;
-procedure DefaultKeys(var K:array of word);
-procedure ConfigureKeys(var K:array of word);
+procedure DefaultKeys(var K:array of TSDL_KeyCode);
+procedure ConfigureKeys(var K:array of TSDL_KeyCode);
 
 function crypt(arvo:longint;jarj:integer):string;
 function uncrypt(str0:string;jarj:integer):longint;
@@ -217,7 +219,7 @@ procedure clrscr;
 
 implementation
 
-uses crt, dos, sj3help, sj3graph, sj3lang, maki, lumi, sj3pcx, sdlport, SysUtils;
+uses crt, dos, sj3help, sj3graph, sj3lang, maki, lumi, sj3pcx, sdlport, sdl2, SysUtils;
 
 {var osote : array [0..4000] of byte; }
 
@@ -317,9 +319,10 @@ begin
 end;
 
 {function givech(xx,yy:integer;bkcolor:byte):char;}
-procedure givech(xx,yy:integer;bkcolor:byte;var tempch,tempch2:char);
+function givech(xx,yy:integer;bkcolor:byte) : TSDL_KeyCode;
 var run : integer;
     col : byte;
+    keycode : TSDL_KeyCode;
 
 begin
 
@@ -337,28 +340,29 @@ begin
 
  until (SDLPort.KeyPressed);
 
-  SDLPort.WaitForKeyPress(tempch,tempch2);
+  keycode:=SDLPort.WaitForKeyPress();
 
   fillbox(xx,yy+6,xx+4,yy+6,bkcolor);
-  writefont(xx,yy,tempch);
+  writefont(xx,yy,chr(keycode));
 
-{ givech:=ch; }
+ givech:=keycode;
 
 end;
 
 
 
 {function getch(xx,yy:integer;bkcolor:byte):char;}
-procedure getch(xx,yy:integer;bkcolor:byte;var tempch,tempch2:char);
+function getch(xx,yy:integer;bkcolor:byte) : TSDL_KeyCode;
+var keycode : TSDL_KeyCode;
 begin
 
   fillbox(xx-2,yy-2,xx+6,yy+8,bkcolor);
 
-   givech(xx,yy,bkcolor,tempch,tempch2);
+  keycode:=givech(xx,yy,bkcolor);
 
    DrawScreen;
 
-{  getch:=ch; }
+  getch:=keycode;
 
 end;
 
@@ -368,6 +372,7 @@ var newstr : string;
     out : boolean;
     cx : integer;
 {    tempch, tempch2 : char; }
+    keycode : TSDL_KeyCode;
 begin
 
  out:=false;
@@ -383,27 +388,26 @@ begin
 
    DrawScreen;
 
-   givech(xx+cx,yy,bkcolor,ch,ch2);
+   keycode:=givech(xx+cx,yy,bkcolor);
 
-   if (ch2=#83) then delete(newstr,1,length(newstr));
+   if (keycode=SDLK_DELETE) then delete(newstr,1,length(newstr));
 
-   case ch of
+   case keycode of
+      SDLK_BACKSPACE : delete(newstr,length(newstr),1);
 
-   #8 : delete(newstr,length(newstr),1);
-
-   #13,#27 : out:=true;
+      SDLK_RETURN, SDLK_ESCAPE : out:=true;
 {
    #32..#254 : if (cx+7 < maxlength) then newstr:=newstr+tempch; }
 
 {   '0'..'9','A'..'Z','','Ž','™',
    'a'..'z','†','„','”','.',',','#','!','(',')','-', }
-   #32..#254 : if (cx+7 < maxlength) and (fontlen(ch)>0) then newstr:=newstr+ch;
+   TSDL_KeyCode(32)..TSDL_KeyCode(254) : if (cx+7 < maxlength) and (fontlen(chr(keycode))>0) then newstr:=newstr+chr(keycode);
 
    end; { case }
 
   until (out);
 
- if (ch=#27) then newstr:=oldstr;
+ if (keycode=SDLK_ESCAPE) then newstr:=oldstr;
 
  getstr:=newstr;
 
@@ -417,6 +421,7 @@ var newstr : string;
     out : boolean;
     cx : integer;
 {    tempch, tempch2 : char; }
+    keycode : TSDL_KeyCode;
 begin
 
  out:=false;
@@ -432,27 +437,26 @@ begin
 
    DrawScreen;
 
-   givech(xx+cx,yy,bkcolor,ch,ch2);
+   keycode:=givech(xx+cx,yy,bkcolor);
 
-   if (ch2=#83) then delete(newstr,1,length(newstr));
+   if (keycode=SDLK_DELETE) then delete(newstr,1,length(newstr));
 
-   case ch of
+   case keycode of
+     SDLK_BACKSPACE : delete(newstr,length(newstr),1);
 
-   #8 : delete(newstr,length(newstr),1);
-
-   #13,#27 : out:=true;
+     SDLK_RETURN, SDLK_ESCAPE : out:=true;
 {
    #32..#254 : if (cx+7 < maxlength) then newstr:=newstr+tempch; }
 
 {   '0'..'9','A'..'Z','','Ž','™',
    'a'..'z','†','„','”','.',',','#','!','(',')','-', }
-   #32..#254 : if (length(newstr) < maxchars) and (fontlen(ch)>0) then newstr:=newstr+ch;
+   TSDL_KeyCode(32)..TSDL_KeyCode(254) : if (length(newstr) < maxchars) and (fontlen(chr(keycode))>0) then newstr:=newstr+chr(keycode);
 
    end; { case }
 
   until (out);
 
- if (ch=#27) then newstr:='ÿ';
+ if (keycode=SDLK_ESCAPE) then newstr:='ÿ';
 
  getstr2:=newstr;
 
@@ -512,6 +516,7 @@ var goals : array[0..numwchills] of integer;
     oldindex, index : integer;
     leave : boolean;
 {    tempch1, tempch2 : char; }
+    keycode : TSDL_KeyCode;
 
  procedure loadgoals;
   var f2 : text;
@@ -601,18 +606,18 @@ begin
 
   drawscreen;
 
-  clearchs;
-  SDLPort.WaitForKeyPress(ch,ch2);
+  keycode:=TSDL_KeyCode(1); { clearchs; }
+  keycode:=SDLPort.WaitForKeyPress();
 
   oldindex:=index;
 
-  if ((ch2=#75) or (ch='-')) and (goals[index]>4) then dec(goals[index],5);
-  if ((ch2=#77) or (ch='+')) and (goals[index]<2500) then inc(goals[index],5);
-  if (ch2=#72) and (index>1) then dec(index);
-  if (ch2=#80) and (index<21) then inc(index);
-  if ((ch=#13) and (index=21)) or (ch2=#68) then leave:=true;
-  if (ch=#27) or (ch2=#79) then index:=21;
-  if (ch2=#71) then index:=1;
+  if ((keycode=SDLK_LEFT) or (keycode=SDLK_MINUS)) and (goals[index]>4) then dec(goals[index],5);
+  if ((keycode=SDLK_RIGHT) or (keycode=SDLK_PLUS)) and (goals[index]<2500) then inc(goals[index],5);
+  if (keycode=SDLK_UP) and (index>1) then dec(index);
+  if (keycode=SDLK_DOWN) and (index<21) then inc(index);
+  if ((keycode=SDLK_RETURN) and (index=21)) or (keycode=SDLK_F10) then leave:=true;
+  if (keycode=SDLK_ESCAPE) or (keycode=SDLK_END) then index:=21;
+  if (keycode=SDLK_HOME) then index:=1;
 
   drawgoal(oldindex,0);
 
@@ -763,6 +768,7 @@ var{ tempch1,tempch2 : char; }
     del : boolean;
     oldindex : integer;
     thing : integer;
+    keycode : TSDL_KeyCode;
 
 begin  { phase: 0 - DEL ei k„y, 1 - DEL k„y, 2 - 2 columns! DEL k„y }
        {        3 - kaikki putkeen, 4 - ei fillarea, 5 - old players }
@@ -814,12 +820,13 @@ begin  { phase: 0 - DEL ei k„y, 1 - DEL k„y, 2 - 2 columns! DEL k„y }
   box(xx,yy,xx+length,yy+height,bgcolor);
   if (fill) then fillarea(xx,yy,xx+length,yy+height,thing);
 
-   clearchs; oldindex:=index;
+   keycode:=TSDL_KeyCode(1); { clearchs; }
+   oldindex:=index;
 
-  if (SDLPort.KeyPressed) then SDLPort.WaitForKeyPress(ch,ch2);
+  if (SDLPort.KeyPressed) then keycode:=SDLPort.WaitForKeyPress();
 
-   case (ch2) of
-   #72,#75 :{  if (cols=2) and (tempch2=#75) and (index>tab) then dec(index,tab)
+   case keycode of
+     SDLK_UP, SDLK_LEFT :{  if (cols=2) and (tempch2=#75) and (index>tab) then dec(index,tab)
              else }
               begin
                if (index>1) then dec(index)
@@ -827,7 +834,7 @@ begin  { phase: 0 - DEL ei k„y, 1 - DEL k„y, 2 - 2 columns! DEL k„y }
                if (index=items+1) then dec(index); { skip v„li }
               { boxcol:=32; }
               end;
-   #77,#80 :{ if (cols=2) and (tempch2=#77) then inc(index,tab)
+     SDLK_RIGHT, SDLK_DOWN :{ if (cols=2) and (tempch2=#77) then inc(index,tab)
               else }
              begin
               if (index<items+1) then inc(index)
@@ -835,17 +842,64 @@ begin  { phase: 0 - DEL ei k„y, 1 - DEL k„y, 2 - 2 columns! DEL k„y }
               if (index=items+1) then inc(index); { skip v„li }
              { boxcol:=32; }
              end;
-   #59..#68 : begin
-               index:=ord(ch2)-58;
-               out:=true;
-              end;
-   end; { case }
+     SDLK_F1 : begin
+                index:=1;
+                out:=true;
+               end;
+     SDLK_F2 : begin
+                index:=2;
+                out:=true;
+               end;
+     SDLK_F3 : begin
+                index:=3;
+                out:=true;
+               end;
+     SDLK_F4 : begin
+                index:=4;
+                out:=true;
+               end;
+     SDLK_F5 : begin
+                index:=5;
+                out:=true;
+               end;
+     SDLK_F6 : begin
+                index:=6;
+                out:=true;
+               end;
+     SDLK_F7 : begin
+                index:=7;
+                out:=true;
+               end;
+     SDLK_F8 : begin
+                index:=8;
+                out:=true;
+               end;
+     SDLK_F9 : begin
+                index:=9;
+                out:=true;
+               end;
+     SDLK_F10 : begin
+                 index:=10;
+                 out:=true;
+                end;
 
-   case (ch) of
-   '0'..'9' : index:=ord(ch)-48;
-   'A'..'F' : if (phase<>6) then index:=ord(ch)-55; { me halutaan ett„ E on edit }
-   'a'..'f' : index:=ord(ch)-87;
-   end;
+     SDLK_0 : index:=0;
+     SDLK_1 : index:=1;
+     SDLK_2 : index:=2;
+     SDLK_3 : index:=3;
+     SDLK_4 : index:=4;
+     SDLK_5 : index:=5;
+     SDLK_6 : index:=6;
+     SDLK_7 : index:=7;
+     SDLK_8 : index:=8;
+     SDLK_9 : index:=9;
+     SDLK_a : index:=10; { TODO: CAPS: if (phase<>6) then } { me halutaan ett„ E on edit }
+     SDLK_b : index:=11; { TODO: CAPS: if (phase<>6) then } { me halutaan ett„ E on edit }
+     SDLK_c : index:=12; { TODO: CAPS: if (phase<>6) then } { me halutaan ett„ E on edit }
+     SDLK_d : index:=13; { TODO: CAPS: if (phase<>6) then } { me halutaan ett„ E on edit }
+     SDLK_e : index:=14; { TODO: CAPS: if (phase<>6) then } { me halutaan ett„ E on edit }
+     SDLK_f : index:=15; { TODO: CAPS: if (phase<>6) then } { me halutaan ett„ E on edit }
+   end; { case }
 
    if (index<=0) or (index>items) then
     begin
@@ -853,14 +907,14 @@ begin  { phase: 0 - DEL ei k„y, 1 - DEL k„y, 2 - 2 columns! DEL k„y }
      if (putkeen) then index:=items+1;
     end;
 
-   if (ch2=#71) then index:=1;
-   if (ch=#27) or (ch2=#79) then
+   if (keycode=SDLK_HOME) then index:=1;
+   if (keycode=SDLK_ESCAPE) or (keycode=SDLK_END) then
     begin
      index:=items+2;
      if (putkeen) then index:=items+1;
     end;
 
-   if (ch2=#68) then { F10 }
+   if (keycode=SDLK_F10) then
     begin
      out:=true;
      index:=items+2;
@@ -868,19 +922,19 @@ begin  { phase: 0 - DEL ei k„y, 1 - DEL k„y, 2 - 2 columns! DEL k„y }
      if (phase=6) then index:=254;
     end;
 
-   if (ch=#9) and (tab>0) then
-    begin { tab }
+   if (keycode=SDLK_TAB) and (tab>0) then
+    begin
      out:=true;
      if (tab<254) then index:=tab;
      if (tab=255) then index:=items+2;
     end;
 
-   if (ch=#13) or (ch=' ') then out:=true;
+   if (keycode=SDLK_RETURN) or (keycode=SDLK_SPACE) then out:=true;
 
    xx:=x-6;
    yy:=y-3+((index-1)*height);
 
-   if (phase=6) and ((ch=#13) or (upcase(ch)='E') or (ch=#9)) then
+   if (phase=6) and ((keycode=SDLK_RETURN) or (keycode=SDLK_e) or (keycode=SDLK_TAB)) then
     begin
      index:=tab;
      out:=true;
@@ -900,7 +954,7 @@ begin  { phase: 0 - DEL ei k„y, 1 - DEL k„y, 2 - 2 columns! DEL k„y }
 
   DrawScreen;
 
-   if (ch2=#83) and (del) then begin out:=true; index:=-index; end; { delete! }
+   if (keycode=SDLK_DELETE) and (del) then begin out:=true; index:=-index; end; { delete! }
 
    if (phase=6) and (index<>oldindex) then out:=true;
 
@@ -915,7 +969,7 @@ begin  { phase: 0 - DEL ei k„y, 1 - DEL k„y, 2 - 2 columns! DEL k„y }
    if (index>items) then index:=0;  { exit }
   end;
 
- clearchs;
+ keycode:=TSDL_KeyCode(1); { clearchs; }
 
  MakeMenu:=index;
 
@@ -1599,6 +1653,7 @@ var temp : integer;
     tempb : byte;
     leave2 : boolean;
 {    ch,ch2 : char; }
+    keycode : TSDL_KeyCode;
     index2 : integer;
     xx, xx2, yy : integer;
     str1 : string;
@@ -1737,9 +1792,9 @@ begin
            writefont(80,90,'FILE '+filestr+'.SJH ALREADY EXISTS.');
            writefont(80,110,'WRITE OVER? (Y/N):');
 
-           getch(190,110,243,ch,ch2);
+           keycode:=getch(190,110,243);
 
-           if (upcase(ch) <> 'Y') then
+           if (upcase(chr(keycode)) <> 'Y') then
             begin leave2:=false; index2:=11; end;
           end;
         end;
@@ -1813,6 +1868,7 @@ var result : byte;
     str1 : string;
     temp, index2 : integer;
 {    ch, ch2 : char; }
+    keycode : TSDL_KeyCode;
     xx, yy : integer;
     leave2 : boolean;
 begin
@@ -1891,9 +1947,9 @@ begin
          writefont(80,90,filename+'.SJR '+lstr(345));
          writefont(80,110,lstr(346)+' ('+lch(6,1)+'/'+lch(7,1)+'):');
 
-         getch(190,110,243,ch,ch2);
+         keycode:=getch(190,110,243);
 
-         if (upcase(ch) <> lch(6,1)) then
+         if (upcase(chr(keycode)) <> lch(6,1)) then
           begin leave2:=false; index2:=3; end;
 
         end;
@@ -1906,49 +1962,46 @@ begin
 
 end;
 
-
-function keyname(chw:word):string;
+function keyname(keycode:TSDL_KeyCode):string;
 var str1:string;
-    ch : key_type;
 begin
-
- ch.A:=chr(hi(chw));
- ch.B:=chr(lo(chw));
 
  str1:='NULL';
 
- case ch.A of
- #0 : case ch.B of
-     #59..#67 : str1:='F'+txt(ord(ch.B)-58);
-      #71 : str1:='HOME';
-      #72 : str1:=lstr(280);
-      #73 : str1:='PAGE UP';
-      #75 : str1:=lstr(281);
-      #76 : str1:='NP 5';
-      #77 : str1:=lstr(282);
-      #79 : str1:='END';
-      #80 : str1:=lstr(283);
-      #81 : str1:='PAGE DOWN';
-      #82 : str1:='INSERT';
-      #83 : str1:='DELETE';
-      end;
-
-  #8 : str1:='BACKSPACE';
-  #9 : str1:='TAB';
-
-{ #13 : str1:='ENTER'; }
- ' ' : str1:='SPACE';
- '.' : str1:='.';
- ',' : str1:=',';
- '-' : str1:='-';
- '+' : str1:='+';
- '/' : str1:='/';
- '*' : str1:='*';
-
-
- #48..#57 : str1:=txt(ord(ch.A)-48);
- #65..#90 : str1:=ch.A;
- #97..#122 : str1:=upcase(ch.A);
+ case keycode of
+   SDLK_F1 : str1:='F1';
+   SDLK_F2 : str1:='F2';
+   SDLK_F3 : str1:='F3';
+   SDLK_F4 : str1:='F4';
+   SDLK_F5 : str1:='F5';
+   SDLK_F6 : str1:='F6';
+   SDLK_F7 : str1:='F7';
+   SDLK_F8 : str1:='F8';
+   SDLK_F9 : str1:='F9';
+   SDLK_F10 : str1:='F10';
+   SDLK_HOME : str1:='HOME';
+   SDLK_UP : str1:=lstr(280);
+   SDLK_PAGEUP : str1:='PAGE UP';
+   SDLK_LEFT : str1:=lstr(281);
+   SDLK_KP_5 : str1:='NP 5';
+   SDLK_RIGHT : str1:=lstr(282);
+   SDLK_END : str1:='END';
+   SDLK_DOWN : str1:=lstr(283);
+   SDLK_PAGEDOWN : str1:='PAGE DOWN';
+   SDLK_INSERT : str1:='INSERT';
+   SDLK_DELETE : str1:='DELETE';
+   SDLK_BACKSPACE : str1:='BACKSPACE';
+   SDLK_TAB : str1:='TAB';
+   { SDLK_RETURN : str1:='ENTER'; }
+   SDLK_SPACE : str1:='SPACE';
+   SDLK_PERIOD : str1:='.';
+   SDLK_COMMA : str1:=',';
+   SDLK_MINUS : str1:='-';
+   SDLK_PLUS : str1:='+';
+   SDLK_SLASH : str1:='/';
+   SDLK_ASTERISK : str1:='*';
+   TSDL_KeyCode(48)..TSDL_KeyCode(57) : str1:=txt(keycode-48);
+   TSDL_KeyCode(97)..TSDL_KeyCode(122) : str1:=upcase(chr(keycode));
 
  end;
 
@@ -1964,23 +2017,23 @@ begin
 end;
 
 
-procedure DefaultKeys(var K:array of word);
+procedure DefaultKeys(var K:array of TSDL_KeyCode);
 begin
 
-  K[1]:=72;
-  K[2]:=77;
-  K[3]:=75;
-  K[4]:=ord('T')*$100+20;
-  K[5]:=ord('R')*$100+19;
+  K[1]:=SDLK_UP;
+  K[2]:=SDLK_RIGHT;
+  K[3]:=SDLK_LEFT;
+  K[4]:=SDLK_t;
+  K[5]:=SDLK_r;
 
 end;
 
 
-procedure ConfigureKeys(var K:array of word);
+procedure ConfigureKeys(var K:array of TSDL_KeyCode);
 var leave2 : boolean;
     index2, temp, temp2, x, y : integer;
     str2 : string;
-    tch : key_type;
+    keycode : TSDL_KeyCode;
 
 begin
 
@@ -2016,8 +2069,6 @@ begin
 
   index2:=makemenu(35,40,150,10,6,index2,243,0,0);
 
-  tch.A:=#0; tch.B:=#0;
-
   case index2 of
   0 : leave2:=true;
   1..5 : begin
@@ -2027,21 +2078,20 @@ begin
             fillbox(180,y-2,319,y+7,243);
             fillarea(180,y-2,319,y+7,63);
 
-            getch(185,y,245,tch.A,tch.B);
-            tch.A:=upcase(tch.A);
+            keycode:=getch(185,y,245);
 
-            str2:=keyname(kword(tch.A,tch.B));
+            str2:=keyname(keycode);
 
             temp2:=0;
 
             for temp:=1 to 5 do
-             if (kword(tch.A,tch.B) = K[temp]) then temp2:=temp;
+             if (keycode = K[temp]) then temp2:=temp;
 
             if (temp2>0) and (temp2<>index2) then str2:='NULL';
 
            until (str2<>'NULL');
 
-           K[index2]:=kword(tch.A,tch.B);
+           K[index2]:=keycode;
 
           end;
   6 : DefaultKeys(K);
@@ -2320,6 +2370,7 @@ end;
 function mightdelete(filestr:string):byte;
 var f1 : text;
     tempb : byte;
+    keycode : TSDL_KeyCode;
 
 begin
 
@@ -2330,9 +2381,9 @@ begin
  writefont(75,90,lstr(194)+' '+filestr);
  writefont(75,110,lstr(193)+' ('+lch(6,1)+'/'+lch(7,1)+')');
 
- getch(220,110,243,ch,ch2);
+ keycode:=getch(220,110,243);
 
- if (upcase(ch) = upcase(lch(6,1))) then
+ if (upcase(chr(keycode)) = upcase(lch(6,1))) then
   begin
 
    assign(f1,filestr);
@@ -2362,7 +2413,7 @@ begin
          Readkey;
         end; }
 
- clearchs;
+ keycode:=TSDL_KeyCode(1); { clearchs; }
 
  mightdelete:=tempb;
 
@@ -2619,12 +2670,13 @@ const days : array [0..6] of string[4] =
 Function waitforkey3(xx,yy:integer;var ch:char):boolean;
 var tempboole : boolean;
 {    ch2 : char; }
+    keycode : TSDL_KeyCode;
 
 begin
 
 { if (place=1) then yy:=191; }
 
- while SDLPort.KeyPressed do SDLPort.WaitForKeyPress(ch,ch2);
+ while SDLPort.KeyPressed do SDLPort.WaitForKeyPress();
 
  tempboole:=false;
 
@@ -2632,9 +2684,9 @@ begin
 
  ewritefont(xx,yy,lstr(15));
 
- getch(xx+1,yy,243,ch,ch2);
+ keycode:=getch(xx+1,yy,243);
 
-  if (ch=#0) and (ch2=#68) then begin tempboole:=true; ch:=#27; end;
+  if (keycode=SDLK_F10) then begin tempboole:=true; keycode:=SDLK_ESCAPE; end;
 
  waitforkey3:=tempboole;
 
@@ -2645,6 +2697,7 @@ function quitting(phase:byte):byte;
                { 0-main menu, 1-world cup }
 var str1, str2 : string;
     tempb : byte;
+    keycode : TSDL_KeyCode;
 begin
 
  str1:=lrstr(251,253);
@@ -2665,11 +2718,11 @@ begin
  writefont(70,90,str1);
  writefont(70,110,str2);
 
- getch(70+tempb,110,243,ch,ch2);
+ keycode:=getch(70+tempb,110,243);
 
  tempb:=1;
- if (upcase(ch) = lch(6,1)) then tempb:=0;
- clearchs;
+ if (upcase(chr(keycode)) = lch(6,1)) then tempb:=0;
+ keycode:=TSDL_KeyCode(1); { clearchs; }
 
  quitting:=tempb;
 
@@ -2706,6 +2759,7 @@ Function Luehaalarit(index,col:byte):byte;
 var { ch : char; }
     old : byte;
     y : integer;
+    keycode : TSDL_KeyCode;
 begin
 
   fillbox(145,50,318,60,243);
@@ -2736,18 +2790,14 @@ begin
   LoadSuit(col,0);
    AsetaPaletti;
 
-  SDLPort.WaitForKeyPress(ch,ch2);
+   keycode:=SDLPort.WaitForKeyPress();
 
-   if (ch=#0) then
-    begin
-     ch:=readkey;
-      if ((ch=#72) or (ch=#75)) and (col>0) then dec(col);
-      if ((ch=#80) or (ch=#77)) and (col<6) then inc(col);
-    end;
+   if ((keycode=SDLK_UP) or (keycode=SDLK_LEFT)) and (col>0) then dec(col);
+   if ((keycode=SDLK_DOWN) or (keycode=SDLK_RIGHT)) and (col<6) then inc(col);
 
- until (ch=#13) or (ch=#27);
+ until (keycode=SDLK_RETURN) or (keycode=SDLK_ESCAPE);
 
- if (ch=#27) then col:=old;
+ if (keycode=SDLK_ESCAPE) then col:=old;
 
  Luehaalarit:=col;
 
@@ -3176,6 +3226,7 @@ end;
 Function choosehill(mmaara:byte):byte;
 var a,b:byte;
 {    ch : char; }
+    keycode : TSDL_KeyCode;
 
 begin
 
@@ -3190,24 +3241,23 @@ begin
 
    gotoxy(32,2+a);
 
-   SDLPort.WaitForKeyPress(ch,ch2);
+   keycode:=SDLPort.WaitForKeyPress();
 
     b:=a;
 
-   if (ch=#0) then
-     case ch2 of
-      #80 : if a<mmaara then inc(a);
-      #72 : if a>1 then dec(a);
-      #71 : a:=1;
-      #79 : a:=mmaara;
+    case keycode of
+      SDLK_DOWN : if a<mmaara then inc(a);
+      SDLK_UP : if a>1 then dec(a);
+      SDLK_HOME : a:=1;
+      SDLK_END : a:=mmaara;
  {     ' ','+' : if ht[f]=1 then ht[f]:=0 else ht[f]:=1; }
-     end;
+    end;
 
      if (a<>b) then drawat(14,1,b,HD[b]^.Kr,HD[b]^.Name);
 
-  until (ch=#27) or (ch=#13);
+ until (keycode=SDLK_ESCAPE) or (keycode=SDLK_RETURN);
 
- if (ch=#27) then a:=255;
+ if (keycode=SDLK_ESCAPE) then a:=255;
 
   window(1,1,80,25);
 
