@@ -712,7 +712,7 @@ begin
 
               keycode:=getch(88+fontlen(lstr(193)),110,243);
 
-              if (upcase(chr(keycode)) = lch(6,1)) then ResetHiscore(4-index[screen]);
+              if (((keycode and SDLK_SCANCODE_MASK) = 0) and (upcase(chr(keycode)) = lch(6,1))) then ResetHiscore(4-index[screen]);
              end;
        5 : begin
             ResetConfig;
@@ -1477,7 +1477,7 @@ begin
     begin
      keycode:=SDLPort.WaitForKeyPress();
      if (keycode=SDLK_F10) then begin cupslut:=true; keycode:=SDLK_ESCAPE; end;
-     if (upcase(chr(keycode))=lch(60,1)) then
+     if (((keycode and SDLK_SCANCODE_MASK) = 0) and (upcase(chr(keycode))=lch(60,1))) then
       begin
        SetupMenu;
        keycode:=TSDL_KeyCode(1);
@@ -2744,7 +2744,7 @@ begin
     str1:=profile[actprofile].realname;
     if (str1='') then str1:=profile[actprofile].name;
 
-    if (upcase(chr(keycode))=lch(298,2)) then
+    if (((keycode and SDLK_SCANCODE_MASK) = 0) and (upcase(chr(keycode))=lch(298,2))) then
      begin
       temp:=replayinfo(replayfilename, str1, replayname, nytmaki, hp);
       if (temp=0) then temp:=writereplay(str1, replayname);

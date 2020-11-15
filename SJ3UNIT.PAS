@@ -1794,7 +1794,7 @@ begin
 
            keycode:=getch(190,110,243);
 
-           if (upcase(chr(keycode)) <> 'Y') then
+           if (((keycode and SDLK_SCANCODE_MASK) = 0) and (upcase(chr(keycode)) <> 'Y')) then
             begin leave2:=false; index2:=11; end;
           end;
         end;
@@ -1949,7 +1949,7 @@ begin
 
          keycode:=getch(190,110,243);
 
-         if (upcase(chr(keycode)) <> lch(6,1)) then
+         if (((keycode and SDLK_SCANCODE_MASK) = 0) and (upcase(chr(keycode)) <> lch(6,1))) then
           begin leave2:=false; index2:=3; end;
 
         end;
@@ -2383,7 +2383,7 @@ begin
 
  keycode:=getch(220,110,243);
 
- if (upcase(chr(keycode)) = upcase(lch(6,1))) then
+ if (((keycode and SDLK_SCANCODE_MASK) = 0) and (upcase(chr(keycode)) = upcase(lch(6,1)))) then
   begin
 
    assign(f1,filestr);
@@ -2721,7 +2721,7 @@ begin
  keycode:=getch(70+tempb,110,243);
 
  tempb:=1;
- if (upcase(chr(keycode)) = lch(6,1)) then tempb:=0;
+ if (((keycode and SDLK_SCANCODE_MASK) = 0) and (upcase(chr(keycode)) = lch(6,1))) then tempb:=0;
  keycode:=TSDL_KeyCode(1); { clearchs; }
 
  quitting:=tempb;

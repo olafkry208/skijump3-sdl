@@ -739,7 +739,7 @@ var hill, y : integer;
       keycode:=getch(190,110,243);
      end;
 
-    if (upcase(chr(keycode))='Y') then
+    if (((keycode and SDLK_SCANCODE_MASK) = 0) and (upcase(chr(keycode))='Y')) then
      begin
       for temp:=1 to 20 do defaulthi(top[temp+41]);
       result:=WriteCustom(str1,sortby,hillorder,cuphills);
@@ -835,16 +835,16 @@ var hill, y : integer;
         dohill(Cuphills+1,3);
         dec(CupHills);
        end;
-      if (upcase(chr(keycode))=paraletter(lstr(285))) then if (selectload=0) then str1:=HillSummary;
-      if (upcase(chr(keycode))=paraletter(lstr(286))) and (CupHills>0) then if (saveset=0) then str1:=HillSummary;
-      if (upcase(chr(keycode))=paraletter(lstr(288))) then
+      if (((keycode and SDLK_SCANCODE_MASK) = 0) and (upcase(chr(keycode))=paraletter(lstr(285)))) then if (selectload=0) then str1:=HillSummary;
+      if (((keycode and SDLK_SCANCODE_MASK) = 0) and (upcase(chr(keycode))=paraletter(lstr(286)))) and (CupHills>0) then if (saveset=0) then str1:=HillSummary;
+      if (((keycode and SDLK_SCANCODE_MASK) = 0) and (upcase(chr(keycode))=paraletter(lstr(288)))) then
        begin
         inc(sortby);
         if (sortby=2) then sortby:=0;
         doscreen;
        end;
 
-      if (upcase(chr(keycode))=paraletter(lstr(287))) then { randomize }
+      if (((keycode and SDLK_SCANCODE_MASK) = 0) and (upcase(chr(keycode))=paraletter(lstr(287)))) then { randomize }
        begin
         if (cuphills < maxcustomhills) then
          begin
@@ -1721,7 +1721,7 @@ begin
  keycode:=getch(70+temp,110,243);
 
  tempboo:=false;
- if (upcase(chr(keycode)) = lch(6,1)) then tempboo:=true;
+ if (((keycode and SDLK_SCANCODE_MASK) = 0) and (upcase(chr(keycode)) = lch(6,1))) then tempboo:=true;
 
  keycode:=TSDL_KeyCode(1); { clearchs; }
 
