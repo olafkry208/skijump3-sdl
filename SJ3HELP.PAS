@@ -1,6 +1,8 @@
 Unit SJ3HELP; { SJ3:n apufunktioita, ei graafisia }
 
 interface
+  type SInt32 = LongInt;
+  type TSDL_KeyCode = SInt32;
 
 var ch, ch2 : char; { n„ppisglobaalit }
 
@@ -9,8 +11,8 @@ function round(r:single):longint;
 
 function nsqrt(x:single):single;
 procedure putsaa;
-procedure waitforkey;
-function waitforkey2:boolean;
+procedure waitforkey(var keycode:TSDL_KeyCode);
+function waitforkey2(var keycode:TSDL_KeyCode):boolean;
 
 procedure cwrite(col:byte;str1:string);
 procedure cwriteln(col:byte;str1:string);
@@ -114,17 +116,16 @@ procedure putsaa;
   while SDLPort.KeyPressed do SDLPort.WaitForKeyPress();
  end;
 
-procedure waitforkey;
+procedure waitforkey(var keycode:TSDL_KeyCode);
 {var ch : char; }
 begin
  putsaa;
- SDLPort.WaitForKeyPress();
+ keycode:=SDLPort.WaitForKeyPress();
 end;
 
-Function waitforkey2:boolean;
+Function waitforkey2(var keycode:TSDL_KeyCode):boolean;
 var tempboole : boolean;
 {    ch2 : char; }
-    keycode : TSDL_KeyCode;
 begin
 
  putsaa;

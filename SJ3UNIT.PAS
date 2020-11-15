@@ -120,7 +120,7 @@ function MakeMenu(x,y,length,height,items,index:integer;bgcolor,phase,tab:byte):
 
 function LoadHill(var KeulaX:integer;nytmaki:integer;Acthill:hill_type):byte;
 
-Function waitforkey3(xx,yy:integer;var ch:char):boolean;
+Function waitforkey3(xx,yy:integer;var keycode:TSDL_KeyCode):boolean;
 procedure teamwarning;
 
 procedure newunregtext;
@@ -680,6 +680,7 @@ var temp : integer;
     l  : longint;
     str1 : string;
     res : byte;
+    tempKeycode : TSDL_KeyCode;
 begin
           res:=0;
 
@@ -747,7 +748,7 @@ begin
              writefont(80,130,'PRESS A KEY...');
              drawscreen;
 
-             waitforkey;
+             waitforkey(tempKeycode);
 
            end;
 
@@ -1343,6 +1344,7 @@ end;
 procedure resultbox(phase:byte;result:integer);
 var temp : integer;
 {    tempch, tempch2 : char; }
+    tempKeycode : TSDL_KeyCode;
 begin
 
  temp:=348+(phase*2);
@@ -1357,7 +1359,7 @@ begin
  fontcolor(246);
 
  writefont(75,90,lstr(temp));
- waitforkey3(240,105,ch);
+ waitforkey3(240,105,tempKeycode);
 
 end;
 
@@ -1365,6 +1367,7 @@ end;
 
 
 procedure makewarning(num:integer;str1:string);
+var tempKeycode : TSDL_KeyCode;
 begin
 
  alertbox;
@@ -1375,7 +1378,7 @@ begin
  writefont(80,120,'PRESS A KEY...');
  drawscreen;
 
- waitforkey;
+ waitforkey(tempKeycode);
 
 end;
 
@@ -1474,11 +1477,13 @@ var f1 : text;
     str1 : string;
     l1,l2,l3,l4 : longint;
     temp : integer;
+    tempKeycode : TSDL_KeyCode;
 
  procedure checkfile(phase:integer);
  var filename : string;
      str2 : string;
      indexstr : string[3];
+     tempKeycode : TSDL_KeyCode;
 
  begin
 
@@ -1500,7 +1505,7 @@ var f1 : text;
    hill.bkindex:='1';
    hill.frindex:='1';
 
-   waitforkey;
+   waitforkey(tempKeycode);
 
    AsetaMoodi($13);
   end;
@@ -1599,7 +1604,7 @@ begin
      AsetaMoodi($3);
      writeln('Error #324A: Something''s wrong in the ',str1,' file.  ');
      writeln('Maybe it''s been edited or something.  That won''t do.  Exiting.');
-     Waitforkey;
+     Waitforkey(tempKeycode);
      Halt;
     end else
      begin
@@ -1612,7 +1617,7 @@ begin
       writeln;
       writeln('Press a key...');
 
-      waitforkey;
+      waitforkey(tempKeycode);
       defaulthill(hill);
 
       AsetaMoodi($13);
@@ -1809,7 +1814,7 @@ begin
          alertbox;
          writefont(80,90,'INVALID FRONT INDEX VALUE.');
          writefont(80,100,'FILE FRONT'+h2.frindex+'.PCX DOESN''T EXIST.');
-         waitforkey3(190,110,ch);
+         waitforkey3(190,110,keycode);
          h2.frindex:=str1;
         end;
       end;
@@ -1821,7 +1826,7 @@ begin
          alertbox;
          writefont(80,90,'INVALID BACK INDEX VALUE.');
          writefont(80,100,'FILE BACK'+h2.bkindex+'.PCX DOESN''T EXIST.');
-         waitforkey3(190,110,ch);
+         waitforkey3(190,110,keycode);
          h2.bkindex:=str1;
         end;
       end;
@@ -2667,16 +2672,15 @@ const days : array [0..6] of string[4] =
 
 
 
-Function waitforkey3(xx,yy:integer;var ch:char):boolean;
+Function waitforkey3(xx,yy:integer;var keycode:TSDL_KeyCode):boolean;
 var tempboole : boolean;
 {    ch2 : char; }
-    keycode : TSDL_KeyCode;
 
 begin
 
 { if (place=1) then yy:=191; }
 
- while SDLPort.KeyPressed do SDLPort.WaitForKeyPress();
+ while SDLPort.KeyPressed do keycode:=SDLPort.WaitForKeyPress();
 
  tempboole:=false;
 
@@ -2730,6 +2734,7 @@ end;
 
 
 procedure teamwarning;
+var tempKeycode : TSDL_KeyCode;
 begin
 
 { alertbox; }
@@ -2749,7 +2754,7 @@ begin
 
  drawscreen;
 
- waitforkey;
+ waitforkey(tempKeycode);
 
 end;
 

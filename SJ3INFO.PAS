@@ -309,6 +309,7 @@ end;
 procedure newcrecordscreen(SetFile:string;NewHi,OldHi:Hiscore;sortby:byte);
 var tempb : boolean;
 {    tempch : char; }
+    tempKeycode : TSDL_KeyCode;
     str1 : string;
 begin
 
@@ -346,7 +347,7 @@ begin
 
  drawscreen;
 
- waitforkey;
+ waitforkey(tempKeycode);
 
 end;
 
@@ -884,7 +885,7 @@ var hill, y : integer;
 {   ewritefont(300,24,str1);
     ewritefont(300,32,hillsummary); }
 
-   waitforkey3(295,183,ch);
+   waitforkey3(295,183,keycode);
 
    { inc(CupHills); }
    WriteCustom('TEMP',sortby,hillorder,cuphills);
@@ -926,6 +927,7 @@ var f4 : text;
     temp,c, temp2, temp3 : integer;
     ok : boolean;
     tempb : byte;
+    tempKeycode : TSDL_KeyCode;
 
 begin
 
@@ -1012,7 +1014,7 @@ begin
      begin
      AsetaMoodi($3);
      writeln('Error #92: Something wrong with the namefile. Shit.');
-     Waitforkey;
+     Waitforkey(tempKeycode);
      Halt;
     end;
 

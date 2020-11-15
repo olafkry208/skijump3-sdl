@@ -288,6 +288,7 @@ var l1,l2,l3,l4,l5 : longint;
     name : NameStr;
     len : integer;
     time : TimeStr;
+    tempKeycode : TSDL_KeyCode;
 
 begin
 
@@ -365,7 +366,7 @@ begin
      writeln('Maybe you tried to edit it or something.  Please don''t do it again.');
      ResetHiscore(1);
      ResetConfig;
-     Waitforkey;
+     Waitforkey(tempKeycode);
      Halt;
     end;
 end;
@@ -1649,7 +1650,7 @@ begin
 
      drawscreen;
 
-     waitforkey;
+     waitforkey(keycode);
      keycode:=SDLK_ESCAPE;
     end;
 
@@ -1727,7 +1728,7 @@ begin
 
         if (cjumper) then keycode:=TSDL_KeyCode(0);
 
-        if (keycode=SDLK_p) then SDLPort.WaitForKeyPress();
+        if (keycode=SDLK_p) then keycode:=SDLPort.WaitForKeyPress();
 
       end;
 
@@ -2455,7 +2456,7 @@ begin
          end;
         if (keycode=SDLK_F10) then begin cupslut:=true; keycode:=SDLK_ESCAPE; end;
         if (keycode=SDLK_ESCAPE) or (keycode=SDLK_RETURN) then Out:=True;
-        if (keycode=SDLK_p) then SDLPort.WaitForKeyPress();
+        if (keycode=SDLK_p) then keycode:=SDLPort.WaitForKeyPress();
 
         DeltaX:=Maki.X;
         DeltaY:=Maki.Y;
@@ -2719,7 +2720,7 @@ begin
       if (draw) then
        begin
         Putsaa;
-        cupslut:=WaitForKey2;
+        cupslut:=WaitForKey2(keycode);
 
        end
         else
@@ -2790,6 +2791,7 @@ var count : longint;
     player, team, cup : integer;
     str1 : string;
     col : array[0..20] of integer;
+    tempKeycode : TSDL_KeyCode;
 
  procedure WS(cln,clr:byte;str2:string);
   var color : byte;
@@ -2919,7 +2921,7 @@ if (jcup) then
    end;
 
   DrawScreen;
-  cupslut:=Waitforkey2;
+  cupslut:=Waitforkey2(tempKeycode);
 
  end else
 
@@ -3664,6 +3666,7 @@ var t1,t2,t3,t4 : integer;
     victimname : string;
     return : byte;
 {    ch,ch2 : char; }
+    tempKeycode : TSDL_KeyCode;
     datestr : string;
 
 begin
@@ -3762,7 +3765,7 @@ begin
             begin
              NewScreen(1,0);
              dolist(t2,vaihe);
-             waitforkey3(305,6,ch);
+             waitforkey3(305,6,tempKeycode);
             end;
 
           end; { if leave }
@@ -4247,6 +4250,7 @@ var temp, temp2 : integer;
     leave : boolean;
 
     extra,str1 : string;
+    tempKeycode : TSDL_KeyCode;
 
 begin
 
@@ -4343,7 +4347,7 @@ begin
 
        dokothrecords(kothpack);
 
-       Waitforkey3(305,6,ch);
+       Waitforkey3(305,6,tempKeycode);
 
       end;
 
@@ -4351,6 +4355,7 @@ end;
 
 procedure showpairs(phase:byte); { 0-esittely, 1-tuloksien kanssa }
 var temp,temp2,who : integer;
+    tempKeycode : TSDL_KeyCode;
 
  procedure drawstuff(column,row,item:byte);
   var xx,yy,plus:integer;
@@ -4419,7 +4424,7 @@ begin
 
     end;
 
- cupslut:=Waitforkey3(305,6,ch);
+ cupslut:=Waitforkey3(305,6,tempKeycode);
 
 end;
 
@@ -4959,6 +4964,7 @@ end;
 
 procedure teamsready;
 var temp, temp2 : integer;
+    tempKeycode : TSDL_KeyCode;
 begin
 
  NewScreen(1,1);
@@ -5010,7 +5016,7 @@ begin
 
  DrawScreen;
 
- CupSlut:=WaitForKey3(305,180,ch);
+ CupSlut:=WaitForKey3(305,180,tempKeycode);
 
 { ReadKey; }
 
@@ -5054,7 +5060,7 @@ var temp, temp2, index, team : integer;
     end;
 
 
-   cupslut:=waitforkey3(305,6,ch);
+   cupslut:=waitforkey3(305,6,keycode);
 
   end;
 

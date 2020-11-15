@@ -88,7 +88,7 @@ var filenames : array[0..500] of string[12];
    writefont(ix,iy,lstr(360+phase*2));
    writefont(ix,iy+10,lstr(361+phase*2));
 
-   waitforkey3(ix+246,iy+21,ch);
+   waitforkey3(ix+246,iy+21,keycode);
 
   end;
 
